@@ -8,6 +8,8 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
 </head>
 <body>
+  <canvas class="confetti-canvas" id="confetti-canvas"></canvas>
+
   <div class="container">
     <div class="game-header">
       <h1>🎯 أقرب رقم</h1>
@@ -26,11 +28,22 @@
     <!-- ── Lobby Screen ──────────────────── -->
     <div id="screen-lobby" class="screen">
       <div class="card">
-        <div class="room-code-display">
+        <div class="room-code-box">
           <div class="room-code" id="room-code-display">----</div>
-          <button class="copy-btn" id="btn-copy-link">📋 نسخ الرابط</button>
+          <div class="link-row">
+            <button class="copy-btn" id="btn-copy-link">📋 نسخ رابط اللاعبين</button>
+          </div>
+          <p class="text-center" style="color:var(--text-dim);font-size:0.85rem;margin-top:8px;" id="room-link-text"></p>
         </div>
-        <p class="text-center" style="color:var(--text-dim);font-size:0.9rem;" id="room-link-text"></p>
+
+        <div class="overlay-link-box" id="overlay-link-box">
+          <div class="ol-title">🎬 رابط الأوفرلاي (Streamlabs / OBS)</div>
+          <div class="ol-desc">أضف هذا الرابط مرة واحدة فقط — يتحدث تلقائياً مع كل غرفة جديدة</div>
+          <div class="ol-url">
+            <input type="text" id="overlay-url" readonly>
+            <button class="copy-btn" id="btn-copy-overlay" style="white-space:nowrap;">📋 نسخ</button>
+          </div>
+        </div>
       </div>
 
       <div class="card twitch-section">
@@ -101,6 +114,7 @@
 
       <div class="card">
         <div class="section-title">أو اختر من بنك الأسئلة</div>
+        <div class="category-tabs" id="category-tabs"></div>
         <div class="question-bank" id="question-bank-list"></div>
       </div>
     </div>
@@ -155,7 +169,7 @@
     <div id="screen-gameover" class="screen">
       <div class="card text-center animate-scale">
         <h2 style="font-size:2rem;margin-bottom:16px;">🏆 النتيجة النهائية</h2>
-        <div id="final-podium"></div>
+        <div class="podium" id="final-podium"></div>
       </div>
       <div class="card animate-slide">
         <div class="scoreboard" id="final-scoreboard"></div>

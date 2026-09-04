@@ -6,6 +6,15 @@ let totalRounds = 10;
 let roundDuration = 20;
 let currentRound = 0;
 let players = [];
+let allQuestions = [];
+let activeCategory = 'الكل';
+
+// ── Persistent Host ID ──────────────────────────
+let hostId = localStorage.getItem('hostId');
+if (!hostId) {
+  hostId = crypto.randomUUID();
+  localStorage.setItem('hostId', hostId);
+}
 
 // ── Sound FX (light) ─────────────────────────────
 const sfx = {
@@ -75,7 +84,7 @@ $('btn-create').onclick = () => {
   sfx.init();
   totalRounds = parseInt($('total-rounds')?.value || 10);
   roundDuration = parseInt($('round-duration')?.value || 20);
-  socket.emit('create-room', { totalRounds, roundDuration });
+  socket.emit('create-room', { totalRounds, roundDuration, hostId });
 };
 
 socket.on('room-created', data => {
@@ -83,12 +92,21 @@ socket.on('room-created', data => {
   $('room-code-display').textContent = roomCode;
   const link = `${location.origin}/play.html?room=${roomCode}`;
   $('room-link-text').textContent = link;
+
+  const overlayUrl = `${location.origin}/overlay.html?host=${hostId}`;
+  $('overlay-url').value = overlayUrl;
+
   showScreen('screen-lobby');
 });
 
 $('btn-copy-link').onclick = () => {
   const link = `${location.origin}/play.html?room=${roomCode}`;
-  navigator.clipboard.writeText(link).then(() => toast('تم نسخ الرابط!'));
+  navigator.clipboard.writeText(link).then(() => toast('تم نسخ رابط اللاعبين!'));
+};
+
+$('btn-copy-overlay').onclick = () => {
+  const url = $('overlay-url').value;
+  navigator.clipboard.writeText(url).then(() => toast('تم نسخ رابط الأوفرلاي!'));
 };
 
 // ── Settings ─────────────────────────────────────
@@ -175,24 +193,51 @@ function goToSetup() {
   socket.emit('get-question-bank');
 }
 
-// ── Question Bank ────────────────────────────────
+// ── Question Bank with Category Tabs ─────────────
 socket.on('question-bank', data => {
+  allQuestions = data.questions;
+  const categories = ['الكل', ...new Set(data.questions.map(q => q.category))];
+  renderCategoryTabs(categories);
+  renderQuestionBank(allQuestions);
+});
+
+function renderCategoryTabs(categories) {
+  const tabs = $('category-tabs');
+  tabs.innerHTML = categories.map(cat =>
+    `<button class="cat-tab ${cat === activeCategory ? 'active' : ''}" data-cat="${cat}">${cat}</button>`
+  ).join('');
+  tabs.querySelectorAll('.cat-tab').forEach(tab => {
+    tab.onclick = () => {
+      activeCategory = tab.dataset.cat;
+      tabs.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const filtered = activeCategory === 'الكل'
+        ? allQuestions
+        : allQuestions.filter(q => q.category === activeCategory);
+      renderQuestionBank(filtered);
+    };
+  });
+}
+
+function renderQuestionBank(questions) {
   const list = $('question-bank-list');
-  list.innerHTML = data.questions.map(q => `
+  list.innerHTML = questions.map(q => `
     <div class="bank-item ${q.used ? 'used' : ''}" data-index="${q.index}">
       <span class="q-emoji">${q.emoji}</span>
       <span class="q-text">${esc(q.question)}</span>
       ${q.used
         ? '<span class="badge badge-gold" style="font-size:0.75rem;">مُستخدم</span>'
-        : `<button class="btn btn-sm btn-secondary" onclick="useQuestion(${q.index}, '${esc(q.question).replace(/'/g, "\\'")}', ${q.answer})">استخدم</button>`
+        : `<button class="btn btn-sm btn-secondary" onclick="useQuestion(${q.index}, this)">استخدم</button>`
       }
     </div>
   `).join('');
-});
+}
 
-window.useQuestion = (index, question, answer) => {
-  $('question-input').value = question;
-  $('answer-input').value = answer;
+window.useQuestion = (index, btn) => {
+  const q = allQuestions.find(q => q.index === index);
+  if (!q) return;
+  $('question-input').value = q.question;
+  $('answer-input').value = q.answer;
   $('btn-start-round').disabled = false;
 };
 
@@ -211,7 +256,6 @@ $('btn-start-round').onclick = () => {
   const correctAnswer = parseFloat($('answer-input').value);
   if (!question || isNaN(correctAnswer)) return;
 
-  const bankItem = document.querySelector(`.bank-item:not(.used)`);
   let questionIndex;
   document.querySelectorAll('.bank-item').forEach(el => {
     const q = el.querySelector('.q-text');
@@ -355,18 +399,27 @@ socket.on('game-over', data => {
   sfx.play('gameOver');
   renderGameOver(data.finalScores);
   showScreen('screen-gameover');
+  launchConfetti();
 });
 
 function renderGameOver(scores) {
   const medals = ['🥇', '🥈', '🥉'];
+  const heights = [160, 120, 90];
+  const colors = [
+    'linear-gradient(180deg, #f1c40f, #e67e22)',
+    'linear-gradient(180deg, #3498db, #2980b9)',
+    'linear-gradient(180deg, #9b59b6, #8e44ad)',
+  ];
+
   const podium = $('final-podium');
   let podiumHtml = '';
   scores.slice(0, 3).forEach((p, i) => {
-    const sizes = ['3rem', '2.2rem', '1.8rem'];
-    podiumHtml += `<div style="margin:16px 0;animation:slideUp 0.5s ease ${i * 0.2}s backwards;">
-      <span style="font-size:${sizes[i]}">${medals[i]}</span>
-      <span style="font-size:1.3rem;font-weight:700;margin:0 8px;">${esc(p.name)}</span>
-      <span class="badge badge-gold">${p.score} نقطة</span>
+    podiumHtml += `<div class="podium-item">
+      <div class="podium-name">${esc(p.name)}</div>
+      <div class="podium-bar" style="height:${heights[i]}px;background:${colors[i]};color:#fff;">
+        ${medals[i]}
+      </div>
+      <div class="podium-score">${p.score} نقطة</div>
     </div>`;
   });
   podium.innerHTML = podiumHtml;
@@ -382,6 +435,61 @@ socket.on('game-reset', data => {
   renderPlayers(data.players);
   showScreen('screen-lobby');
 });
+
+// ── Confetti ─────────────────────────────────────
+function launchConfetti() {
+  const canvas = $('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const pieces = [];
+  const confettiColors = ['#f1c40f', '#e74c3c', '#2ecc71', '#3498db', '#9b59b6', '#e67e22', '#1abc9c', '#e91e63'];
+
+  for (let i = 0; i < 150; i++) {
+    pieces.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      w: Math.random() * 10 + 5,
+      h: Math.random() * 6 + 3,
+      color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+      vx: (Math.random() - 0.5) * 3,
+      vy: Math.random() * 3 + 2,
+      rot: Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 10,
+      opacity: 1,
+    });
+  }
+
+  let frame = 0;
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    frame++;
+
+    for (const p of pieces) {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.rotSpeed;
+      p.vy += 0.04;
+      if (frame > 120) p.opacity -= 0.01;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate((p.rot * Math.PI) / 180);
+      ctx.globalAlpha = Math.max(0, p.opacity);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    }
+
+    if (frame < 240 && pieces.some(p => p.opacity > 0)) {
+      requestAnimationFrame(animate);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+  requestAnimationFrame(animate);
+}
 
 // ── Animate Number ───────────────────────────────
 function animateNumber(el, target) {

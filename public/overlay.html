@@ -4,10 +4,26 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>أقرب رقم - أوفرلاي</title>
-  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --gold: #f1c40f;
+      --green: #2ecc71;
+      --blue: #3498db;
+      --red: #e74c3c;
+      --purple: #9b59b6;
+      --text: #f0f0f5;
+      --text-dim: rgba(200,200,220,0.6);
+      --gold-glow: rgba(241,196,15,0.25);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
-      background: transparent !important;
+      font-family: 'Tajawal', sans-serif;
+      color: var(--text);
+      direction: rtl;
+      background: transparent;
       overflow: hidden;
     }
 
@@ -22,16 +38,26 @@
       position: relative;
     }
 
-    .ov-connect {
-      background: rgba(22,33,62,0.9);
-      padding: 32px;
-      border-radius: 16px;
+    .ov-waiting-screen {
       text-align: center;
     }
 
-    .ov-connect input {
-      max-width: 200px;
-      margin: 12px auto;
+    .ov-waiting-screen .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(255,255,255,0.1);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .ov-waiting-screen p {
+      font-size: 1.4rem;
+      color: var(--text-dim);
+      text-shadow: 0 2px 8px rgba(0,0,0,0.8);
     }
 
     .ov-main { display: none; width: 100%; height: 100%; position: relative; }
@@ -47,6 +73,7 @@
       font-weight: 700;
       font-size: 1.1rem;
       backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.06);
     }
 
     .ov-question {
@@ -64,11 +91,16 @@
       text-shadow: 0 3px 20px rgba(0,0,0,0.9);
       margin: 20px 0;
       direction: ltr;
-      transition: color 0.3s;
+      transition: color 0.3s, transform 0.15s;
     }
 
     .ov-timer.warning { color: var(--gold); }
     .ov-timer.danger { color: var(--red); animation: pulse 0.5s ease-in-out infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.05); }
+    }
 
     .ov-answer-hidden {
       font-size: 3rem;
@@ -85,12 +117,18 @@
     }
 
     .ov-answer-reveal {
-      font-size: 5rem;
+      font-size: 6rem;
       font-weight: 900;
       color: var(--gold);
-      text-shadow: 0 3px 20px rgba(241,196,15,0.5);
+      text-shadow: 0 0 40px var(--gold-glow), 0 3px 20px rgba(241,196,15,0.5);
       direction: ltr;
-      animation: bounceIn 0.6s ease;
+      animation: revealBounce 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    @keyframes revealBounce {
+      0% { transform: scale(0); opacity: 0; }
+      60% { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
     }
 
     .ov-result-section {
@@ -109,20 +147,29 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 12px 20px;
-      background: rgba(22,33,62,0.7);
-      border-radius: 12px;
+      padding: 14px 22px;
+      background: rgba(22,33,62,0.75);
+      border-radius: 14px;
       font-size: 1.2rem;
-      backdrop-filter: blur(4px);
-      animation: slideUp 0.4s ease backwards;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.06);
+      animation: rankSlide 0.5s ease backwards;
+      transform-origin: right center;
     }
 
-    .ov-rank-row:nth-child(1) { background: rgba(46,204,113,0.2); animation-delay: 0.1s; }
-    .ov-rank-row:nth-child(2) { background: rgba(52,152,219,0.15); animation-delay: 0.2s; }
-    .ov-rank-row:nth-child(3) { background: rgba(155,89,182,0.15); animation-delay: 0.3s; }
+    @keyframes rankSlide {
+      from { opacity: 0; transform: translateX(60px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
 
-    .ov-rank-row .medal { font-size: 1.6rem; min-width: 36px; text-align: center; }
-    .ov-rank-row .name { flex: 1; font-weight: 700; }
+    .ov-rank-row:nth-child(1) { background: rgba(46,204,113,0.2); border-color: rgba(46,204,113,0.15); animation-delay: 0.2s; }
+    .ov-rank-row:nth-child(2) { background: rgba(52,152,219,0.15); border-color: rgba(52,152,219,0.1); animation-delay: 0.4s; }
+    .ov-rank-row:nth-child(3) { background: rgba(155,89,182,0.15); border-color: rgba(155,89,182,0.1); animation-delay: 0.6s; }
+    .ov-rank-row:nth-child(4) { animation-delay: 0.8s; }
+    .ov-rank-row:nth-child(5) { animation-delay: 1.0s; }
+
+    .ov-rank-row .medal { font-size: 1.8rem; min-width: 40px; text-align: center; }
+    .ov-rank-row .name { flex: 1; font-weight: 700; font-size: 1.3rem; }
     .ov-rank-row .val { direction: ltr; color: var(--text-dim); }
     .ov-rank-row .diff { direction: ltr; font-size: 0.9rem; color: var(--text-dim); }
     .ov-rank-row .pts { color: var(--green); font-weight: 700; min-width: 70px; text-align: left; }
@@ -136,6 +183,7 @@
       border-radius: 16px;
       padding: 16px;
       backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.06);
       max-height: calc(100vh - 40px);
       overflow-y: auto;
     }
@@ -168,20 +216,92 @@
       position: relative;
     }
 
-    .ov-waiting {
-      font-size: 1.5rem;
-      color: var(--text-dim);
-      text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    .number-line {
+      position: relative;
+      height: 3px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      direction: ltr;
     }
 
-    .ov-gameover {
-      text-align: center;
+    .nl-correct {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
+
+    .nl-correct .star {
+      font-size: 1.6rem;
+      filter: drop-shadow(0 0 12px var(--gold));
+      animation: starPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes starPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+    }
+
+    .nl-correct .nl-val {
+      position: absolute;
+      top: -28px;
+      font-size: 0.85rem;
+      color: var(--gold);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .nl-point {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 5;
+      animation: dotAppear 0.4s ease backwards;
+    }
+
+    @keyframes dotAppear {
+      from { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .nl-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid rgba(0,0,0,0.3);
+      box-shadow: 0 0 8px rgba(0,0,0,0.3);
+    }
+
+    .nl-point .nl-label {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      white-space: nowrap;
+      color: var(--text-dim);
+    }
+
+    .nl-point .nl-val {
+      position: absolute;
+      top: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.7rem;
+      white-space: nowrap;
+      color: var(--text-dim);
+    }
+
+    .ov-gameover { text-align: center; }
 
     .ov-gameover h2 {
-      font-size: 3rem;
+      font-size: 3.5rem;
       margin-bottom: 24px;
       text-shadow: 0 3px 16px rgba(0,0,0,0.8);
+      animation: revealBounce 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     }
 
     .ov-podium {
@@ -192,28 +312,31 @@
       margin: 24px 0;
     }
 
-    .ov-podium-item {
-      text-align: center;
-      animation: slideUp 0.5s ease backwards;
-    }
+    .ov-podium-item { text-align: center; }
 
-    .ov-podium-item:nth-child(1) { animation-delay: 0.3s; }
-    .ov-podium-item:nth-child(2) { animation-delay: 0.1s; }
-    .ov-podium-item:nth-child(3) { animation-delay: 0.5s; }
+    .ov-podium-item:nth-child(1) { animation: podiumRise 0.8s ease 0.4s backwards; order: 2; }
+    .ov-podium-item:nth-child(2) { animation: podiumRise 0.8s ease 0.2s backwards; order: 1; }
+    .ov-podium-item:nth-child(3) { animation: podiumRise 0.8s ease 0.6s backwards; order: 3; }
+
+    @keyframes podiumRise {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     .ov-podium-name {
       font-weight: 700;
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       margin-bottom: 8px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
     }
 
     .ov-podium-bar {
-      width: 120px;
-      border-radius: 12px 12px 0 0;
+      width: 130px;
+      border-radius: 14px 14px 0 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
+      font-size: 2rem;
       font-weight: 900;
       color: #fff;
       padding-top: 12px;
@@ -223,23 +346,36 @@
       font-size: 1.1rem;
       color: var(--gold);
       margin-top: 4px;
+      font-weight: 700;
     }
+
+    .confetti-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 9998;
+    }
+
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
+  <canvas class="confetti-canvas" id="confetti-canvas"></canvas>
+
   <div class="overlay-wrap">
-    <div class="ov-connect" id="ov-connect">
-      <h2>🎯 أوفرلاي أقرب رقم</h2>
-      <p style="color:var(--text-dim);margin:8px 0;">أدخل كود الغرفة</p>
-      <input type="text" id="ov-room-code" maxlength="4" inputmode="numeric"
-        style="text-align:center;font-size:1.5rem;font-weight:700;letter-spacing:6px;direction:ltr;">
-      <button class="btn btn-primary btn-block mt-12" id="ov-btn-connect">اتصال</button>
+    <div id="ov-waiting-screen" class="ov-waiting-screen">
+      <div class="spinner"></div>
+      <p>في انتظار المضيف...</p>
     </div>
 
     <div class="ov-main" id="ov-main">
       <div class="ov-round-badge" id="ov-round-badge"></div>
 
-      <div id="ov-state-waiting" class="ov-waiting">في انتظار بداية الجولة...</div>
+      <div id="ov-state-waiting" class="ov-waiting-screen">
+        <div class="spinner"></div>
+        <p>في انتظار بداية الجولة...</p>
+      </div>
 
       <div id="ov-state-playing" style="display:none;text-align:center;width:100%;">
         <div class="ov-question" id="ov-question"></div>
@@ -275,32 +411,30 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
-    let connected = false;
-
     const $ = id => document.getElementById(id);
 
     const params = new URLSearchParams(location.search);
-    const roomFromUrl = params.get('room');
-    if (roomFromUrl) {
-      $('ov-room-code').value = roomFromUrl;
+    const hostId = params.get('host');
+
+    if (hostId) {
+      socket.emit('join-overlay-by-host', { hostId });
     }
 
-    $('ov-btn-connect').onclick = () => connectOverlay();
-    $('ov-room-code').addEventListener('keydown', e => { if (e.key === 'Enter') connectOverlay(); });
-
-    function connectOverlay() {
-      const code = $('ov-room-code').value.trim();
-      if (code.length !== 4) return;
-      socket.emit('join-overlay', { roomCode: code });
-    }
+    socket.on('waiting-for-host', () => {
+      $('ov-waiting-screen').style.display = '';
+      $('ov-main').classList.remove('active');
+    });
 
     socket.on('overlay-joined', data => {
-      connected = true;
-      $('ov-connect').style.display = 'none';
+      $('ov-waiting-screen').style.display = 'none';
       $('ov-main').classList.add('active');
       updateSidebar(data.players);
       $('ov-round-badge').textContent = '';
       showOvState('waiting');
+    });
+
+    socket.on('host-room-changed', data => {
+      socket.emit('join-overlay-by-host', { hostId });
     });
 
     socket.on('round-started', data => {
@@ -308,7 +442,7 @@
       $('ov-question').textContent = data.question;
       $('ov-timer').textContent = data.duration;
       $('ov-timer').className = 'ov-timer';
-      $('ov-guess-count').textContent = `التخمينات: 0`;
+      $('ov-guess-count').textContent = 'التخمينات: 0';
       showOvState('playing');
     });
 
@@ -335,6 +469,7 @@
     socket.on('game-over', data => {
       renderOvGameOver(data.finalScores);
       showOvState('gameover');
+      launchConfetti();
     });
 
     socket.on('prepare-next-round', () => showOvState('waiting'));
@@ -348,9 +483,7 @@
     });
 
     socket.on('room-closed', () => {
-      $('ov-main').classList.remove('active');
-      $('ov-connect').style.display = 'block';
-      connected = false;
+      showOvState('waiting');
     });
 
     socket.on('error-msg', data => console.error(data.message));
@@ -363,13 +496,13 @@
     }
 
     function updateSidebar(players) {
-      const sorted = [...players].sort((a, b) => b.score - a.score);
+      const sorted = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
       let html = '';
       sorted.slice(0, 10).forEach((p, i) => {
         html += `<div class="ov-sb-row">
           <span class="sb-rank">${i + 1}</span>
           <span class="sb-name">${esc(p.name)}</span>
-          <span class="sb-score">${p.score}</span>
+          <span class="sb-score">${p.score || 0}</span>
         </div>`;
       });
       $('ov-scoreboard').innerHTML = html;
@@ -398,9 +531,9 @@
         <span class="star">⭐</span>
       </div>`;
 
-      const colors = ['#2ecc71', '#3498db', '#9b59b6', '#e67e22', '#e74c3c'];
+      const colors = ['#2ecc71', '#3498db', '#9b59b6', '#e67e22', '#e74c3c', '#1abc9c', '#e91e63', '#ff9800'];
       nl.points.slice(0, 8).forEach((p, i) => {
-        const color = colors[Math.min(i, colors.length - 1)];
+        const color = colors[i % colors.length];
         html += `<div class="nl-point" style="left:${p.position}%">
           <div class="nl-dot" style="background:${color}"></div>
           <span class="nl-val">${p.value}</span>
@@ -414,16 +547,17 @@
 
     function renderOvGameOver(scores) {
       const medals = ['🥇', '🥈', '🥉'];
-      const heights = [160, 120, 90];
-      const colors = ['linear-gradient(180deg, #f1c40f, #e67e22)', 'linear-gradient(180deg, #3498db, #2980b9)', 'linear-gradient(180deg, #9b59b6, #8e44ad)'];
-      const order = [1, 0, 2];
+      const heights = [170, 130, 95];
+      const bgColors = [
+        'linear-gradient(180deg, #f1c40f, #e67e22)',
+        'linear-gradient(180deg, #3498db, #2980b9)',
+        'linear-gradient(180deg, #9b59b6, #8e44ad)',
+      ];
       let podiumHtml = '';
-      order.forEach(idx => {
-        if (!scores[idx]) return;
-        const p = scores[idx];
+      scores.slice(0, 3).forEach((p, idx) => {
         podiumHtml += `<div class="ov-podium-item">
           <div class="ov-podium-name">${esc(p.name)}</div>
-          <div class="ov-podium-bar" style="height:${heights[idx]}px;background:${colors[idx]}">
+          <div class="ov-podium-bar" style="height:${heights[idx]}px;background:${bgColors[idx]}">
             ${medals[idx]}
           </div>
           <div class="ov-podium-score">${p.score} نقطة</div>
@@ -443,8 +577,58 @@
       $('ov-final-scores').innerHTML = scoresHtml;
     }
 
+    function launchConfetti() {
+      const canvas = $('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const pieces = [];
+      const confettiColors = ['#f1c40f', '#e74c3c', '#2ecc71', '#3498db', '#9b59b6', '#e67e22'];
+      for (let i = 0; i < 200; i++) {
+        pieces.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          w: Math.random() * 12 + 4,
+          h: Math.random() * 6 + 3,
+          color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+          vx: (Math.random() - 0.5) * 4,
+          vy: Math.random() * 3 + 2,
+          rot: Math.random() * 360,
+          rotSpeed: (Math.random() - 0.5) * 12,
+          opacity: 1,
+        });
+      }
+
+      let frame = 0;
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        frame++;
+        for (const p of pieces) {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rot += p.rotSpeed;
+          p.vy += 0.04;
+          if (frame > 150) p.opacity -= 0.008;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rot * Math.PI) / 180);
+          ctx.globalAlpha = Math.max(0, p.opacity);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        }
+        if (frame < 300 && pieces.some(p => p.opacity > 0)) {
+          requestAnimationFrame(animate);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+
     function animateNumber(el, target) {
-      const duration = 1200;
+      const duration = 1500;
       const startTime = performance.now();
       const absTarget = Math.abs(target);
       const sign = target < 0 ? '-' : '';

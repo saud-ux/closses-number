@@ -21,6 +21,7 @@ const questionBank = [
   { category: 'جغرافيا', emoji: '🏙️', question: 'كم ارتفاع برج خليفة بالمتر؟', answer: 828 },
   { category: 'جغرافيا', emoji: '🏝️', question: 'كم عدد جزر إندونيسيا؟', answer: 17508 },
   { category: 'جغرافيا', emoji: '🌊', question: 'كم عمق أعمق نقطة في المحيط بالمتر؟', answer: 10994 },
+  { category: 'جغرافيا', emoji: '🏔️', question: 'كم ارتفاع جبل إيفرست بالمتر؟', answer: 8849 },
   { category: 'علوم', emoji: '🦴', question: 'كم عدد عظام جسم الإنسان البالغ؟', answer: 206 },
   { category: 'علوم', emoji: '🦷', question: 'كم عدد أسنان الإنسان البالغ؟', answer: 32 },
   { category: 'علوم', emoji: '🌡️', question: 'كم درجة حرارة الإنسان الطبيعية؟', answer: 37 },
@@ -28,27 +29,29 @@ const questionBank = [
   { category: 'علوم', emoji: '🌙', question: 'كم المسافة بين الأرض والقمر بالكيلومتر؟', answer: 384400 },
   { category: 'علوم', emoji: '🪐', question: 'كم عدد كواكب المجموعة الشمسية؟', answer: 8 },
   { category: 'علوم', emoji: '💡', question: 'كم سرعة الضوء بالكيلومتر في الثانية؟', answer: 299792 },
+  { category: 'علوم', emoji: '❤️', question: 'كم مرة ينبض قلب الإنسان في الدقيقة (تقريباً)؟', answer: 72 },
   { category: 'رياضة', emoji: '⚽', question: 'كم عدد لاعبي فريق كرة القدم؟', answer: 11 },
   { category: 'رياضة', emoji: '🏟️', question: 'كم طول ملعب كرة القدم بالمتر (تقريباً)؟', answer: 105 },
   { category: 'رياضة', emoji: '🏆', question: 'في أي سنة أُقيمت أول بطولة كأس عالم؟', answer: 1930 },
   { category: 'رياضة', emoji: '🇧🇷', question: 'كم عدد بطولات كأس العالم اللي فازت فيها البرازيل؟', answer: 5 },
+  { category: 'رياضة', emoji: '🏀', question: 'كم ارتفاع سلة كرة السلة بالسنتيمتر؟', answer: 305 },
   { category: 'تاريخ', emoji: '📞', question: 'في أي سنة ميلادية اخترع الهاتف؟', answer: 1876 },
   { category: 'تاريخ', emoji: '🚀', question: 'في أي سنة هبط أول إنسان على القمر؟', answer: 1969 },
   { category: 'تاريخ', emoji: '🇸🇦', question: 'في أي سنة تأسست المملكة العربية السعودية؟', answer: 1932 },
+  { category: 'تاريخ', emoji: '🌐', question: 'في أي سنة اخترعت شبكة الإنترنت؟', answer: 1983 },
   { category: 'إسلامية', emoji: '📖', question: 'كم عدد سور القرآن الكريم؟', answer: 114 },
   { category: 'إسلامية', emoji: '📜', question: 'كم عدد آيات سورة البقرة؟', answer: 286 },
   { category: 'إسلامية', emoji: '✨', question: 'كم عدد أحرف البسملة؟', answer: 19 },
   { category: 'أرقام', emoji: '⏱️', question: 'كم ثانية في اليوم؟', answer: 86400 },
   { category: 'أرقام', emoji: '🕐', question: 'كم ساعة في السنة؟', answer: 8760 },
   { category: 'أرقام', emoji: '📅', question: 'كم يوم في 4 سنوات (مع السنة الكبيسة)؟', answer: 1461 },
-  { category: 'جغرافيا', emoji: '🏔️', question: 'كم ارتفاع جبل إيفرست بالمتر؟', answer: 8849 },
-  { category: 'علوم', emoji: '❤️', question: 'كم مرة ينبض قلب الإنسان في الدقيقة (تقريباً)؟', answer: 72 },
-  { category: 'رياضة', emoji: '🏀', question: 'كم ارتفاع سلة كرة السلة بالسنتيمتر؟', answer: 305 },
-  { category: 'تاريخ', emoji: '🌐', question: 'في أي سنة اخترعت شبكة الإنترنت؟', answer: 1983 },
   { category: 'أرقام', emoji: '🔢', question: 'كم عدد الدقائق في الأسبوع؟', answer: 10080 },
 ];
 
 // ── Helpers ─────────────────────────────────────────────────────
+const rooms = new Map();
+const hostRooms = new Map(); // persistentHostId → roomCode
+
 function generateRoomCode() {
   let code;
   do {
@@ -79,7 +82,7 @@ function buildNumberLine(ranked, correctAnswer) {
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
-  const padding = range * 0.1;
+  const padding = range * 0.12;
   const lineMin = min - padding;
   const lineMax = max + padding;
   const lineRange = lineMax - lineMin;
@@ -95,21 +98,25 @@ function buildNumberLine(ranked, correctAnswer) {
   return { points, correctAnswer, correctPosition: correctPos, min: lineMin, max: lineMax };
 }
 
-// ── Room State ──────────────────────────────────────────────────
-const rooms = new Map();
+function getPlayersArray(room) {
+  return [...room.players.values()].map(p => ({ name: p.name, type: p.type, score: p.score }));
+}
 
 // ── Socket.IO ───────────────────────────────────────────────────
 io.on('connection', (socket) => {
   let currentRoom = null;
-  let role = null; // 'host' | 'player' | 'overlay'
+  let role = null;
   let playerName = null;
-  let playerType = 'web';
+  let watchingHostId = null;
 
+  // ── Host: Create Room ──
   socket.on('create-room', (data) => {
     const code = generateRoomCode();
+    const persistentHostId = data && data.hostId;
     const room = {
       code,
-      hostId: socket.id,
+      hostSocketId: socket.id,
+      persistentHostId,
       players: new Map(),
       overlays: new Set(),
       state: 'lobby',
@@ -131,22 +138,36 @@ io.on('connection', (socket) => {
     currentRoom = code;
     role = 'host';
     socket.join(code);
+
+    if (persistentHostId) {
+      hostRooms.set(persistentHostId, code);
+      io.to(`hostwatch:${persistentHostId}`).emit('host-room-changed', {
+        roomCode: code,
+        settings: room.settings,
+        players: [],
+        state: room.state,
+        currentRound: 0,
+      });
+    }
+
     socket.emit('room-created', { roomCode: code });
   });
 
+  // ── Host: Update Settings ──
   socket.on('update-settings', (data) => {
     const room = rooms.get(currentRoom);
-    if (!room || room.hostId !== socket.id) return;
+    if (!room || room.hostSocketId !== socket.id) return;
     if (data.totalRounds) room.settings.totalRounds = parseInt(data.totalRounds);
     if (data.roundDuration) room.settings.roundDuration = parseInt(data.roundDuration);
     io.to(currentRoom).emit('settings-updated', room.settings);
   });
 
+  // ── Player: Join Room ──
   socket.on('join-room', (data) => {
     const { roomCode, playerName: name } = data;
     const room = rooms.get(roomCode);
     if (!room) return socket.emit('error-msg', { message: 'الغرفة غير موجودة' });
-    if (room.state !== 'lobby' && room.state !== 'setup' && room.state !== 'results') {
+    if (room.state === 'playing') {
       return socket.emit('error-msg', { message: 'الجولة قائمة، انتظر الجولة القادمة' });
     }
 
@@ -159,7 +180,6 @@ io.on('connection', (socket) => {
     currentRoom = roomCode;
     role = 'player';
     playerName = name;
-    playerType = 'web';
     socket.join(roomCode);
 
     socket.emit('joined', {
@@ -176,10 +196,11 @@ io.on('connection', (socket) => {
       name,
       type: 'web',
       playerCount: room.players.size,
-      players: [...room.players.values()].map(p => ({ name: p.name, type: p.type, score: p.score })),
+      players: getPlayersArray(room),
     });
   });
 
+  // ── Overlay: Join by room code (legacy) ──
   socket.on('join-overlay', (data) => {
     const room = rooms.get(data.roomCode);
     if (!room) return socket.emit('error-msg', { message: 'الغرفة غير موجودة' });
@@ -190,23 +211,50 @@ io.on('connection', (socket) => {
     socket.emit('overlay-joined', {
       roomCode: data.roomCode,
       settings: room.settings,
-      players: [...room.players.values()].map(p => ({ name: p.name, type: p.type, score: p.score })),
+      players: getPlayersArray(room),
       state: room.state,
       currentRound: room.currentRound,
     });
   });
 
+  // ── Overlay: Join by persistent host ID (auto-connect) ──
+  socket.on('join-overlay-by-host', (data) => {
+    const { hostId } = data;
+    watchingHostId = hostId;
+    role = 'overlay';
+    socket.join(`hostwatch:${hostId}`);
+
+    const roomCode = hostRooms.get(hostId);
+    if (roomCode && rooms.has(roomCode)) {
+      const room = rooms.get(roomCode);
+      currentRoom = roomCode;
+      room.overlays.add(socket.id);
+      socket.join(roomCode);
+      socket.emit('overlay-joined', {
+        roomCode,
+        settings: room.settings,
+        players: getPlayersArray(room),
+        state: room.state,
+        currentRound: room.currentRound,
+      });
+    } else {
+      socket.emit('waiting-for-host');
+    }
+  });
+
+  // ── Host: Question Bank ──
   socket.on('get-question-bank', () => {
     const room = rooms.get(currentRoom);
-    if (!room || room.hostId !== socket.id) return;
+    if (!room || room.hostSocketId !== socket.id) return;
     const available = questionBank
       .map((q, i) => ({ ...q, index: i, used: room.usedQuestions.has(i) }));
     socket.emit('question-bank', { questions: available });
   });
 
+  // ── Host: Start Round ──
   socket.on('start-round', (data) => {
     const room = rooms.get(currentRoom);
-    if (!room || room.hostId !== socket.id) return;
+    if (!room || room.hostSocketId !== socket.id) return;
     if (room.currentRound >= room.settings.totalRounds) return;
 
     room.currentRound++;
@@ -215,7 +263,7 @@ io.on('connection', (socket) => {
     room.guesses = new Map();
     room.state = 'playing';
 
-    if (data.questionIndex !== undefined) {
+    if (data.questionIndex !== undefined && data.questionIndex !== null) {
       room.usedQuestions.add(data.questionIndex);
     }
 
@@ -244,6 +292,7 @@ io.on('connection', (socket) => {
     }, 1000);
   });
 
+  // ── Player: Submit Guess ──
   socket.on('submit-guess', (data) => {
     const room = rooms.get(currentRoom);
     if (!room || room.state !== 'playing') return;
@@ -282,24 +331,21 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ── Host: End Round Early ──
   socket.on('end-round-early', () => {
     const room = rooms.get(currentRoom);
-    if (!room || room.hostId !== socket.id || room.state !== 'playing') return;
-    if (room.timer) {
-      clearInterval(room.timer);
-      room.timer = null;
-    }
+    if (!room || room.hostSocketId !== socket.id || room.state !== 'playing') return;
+    if (room.timer) { clearInterval(room.timer); room.timer = null; }
     endRound(room);
   });
 
+  // ── Host: Next Round ──
   socket.on('next-round', () => {
     const room = rooms.get(currentRoom);
-    if (!room || room.hostId !== socket.id) return;
+    if (!room || room.hostSocketId !== socket.id) return;
 
     if (room.currentRound >= room.settings.totalRounds) {
-      const finalScores = [...room.players.values()]
-        .map(p => ({ name: p.name, type: p.type, score: p.score }))
-        .sort((a, b) => b.score - a.score);
+      const finalScores = getPlayersArray(room).sort((a, b) => b.score - a.score);
       room.state = 'gameover';
       io.to(room.code).emit('game-over', { finalScores });
     } else {
@@ -311,9 +357,10 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ── Host: Reset Game ──
   socket.on('reset-game', () => {
     const room = rooms.get(currentRoom);
-    if (!room || room.hostId !== socket.id) return;
+    if (!room || room.hostSocketId !== socket.id) return;
     if (room.timer) { clearInterval(room.timer); room.timer = null; }
     room.currentRound = 0;
     room.state = 'lobby';
@@ -321,14 +368,13 @@ io.on('connection', (socket) => {
     room.guesses.clear();
     for (const p of room.players.values()) p.score = 0;
 
-    io.to(room.code).emit('game-reset', {
-      players: [...room.players.values()].map(p => ({ name: p.name, type: p.type, score: p.score })),
-    });
+    io.to(room.code).emit('game-reset', { players: getPlayersArray(room) });
   });
 
+  // ── Host: Connect Twitch ──
   socket.on('connect-twitch', (data) => {
     const room = rooms.get(currentRoom);
-    if (!room || room.hostId !== socket.id) return;
+    if (!room || room.hostSocketId !== socket.id) return;
     if (!tmi) return socket.emit('twitch-status', { connected: false, error: 'tmi.js غير مثبت' });
 
     const channel = data.channel.replace(/^#/, '').toLowerCase().trim();
@@ -359,10 +405,8 @@ io.on('connection', (socket) => {
           if (room.players.has(twitchId)) return;
           room.players.set(twitchId, { name: username, type: 'twitch', score: 0 });
           io.to(room.code).emit('player-joined', {
-            name: username,
-            type: 'twitch',
-            playerCount: room.players.size,
-            players: [...room.players.values()].map(p => ({ name: p.name, type: p.type, score: p.score })),
+            name: username, type: 'twitch',
+            playerCount: room.players.size, players: getPlayersArray(room),
           });
           return;
         }
@@ -372,8 +416,7 @@ io.on('connection', (socket) => {
           room.players.delete(twitchId);
           io.to(room.code).emit('player-left', {
             name: username,
-            playerCount: room.players.size,
-            players: [...room.players.values()].map(p => ({ name: p.name, type: p.type, score: p.score })),
+            playerCount: room.players.size, players: getPlayersArray(room),
           });
           return;
         }
@@ -382,18 +425,13 @@ io.on('connection', (socket) => {
           const value = extractNumber(message);
           if (value === null) return;
           room.guesses.set(twitchId, {
-            playerId: twitchId,
-            playerName: username,
-            value,
-            timestamp: Date.now(),
+            playerId: twitchId, playerName: username, value, timestamp: Date.now(),
           });
           io.to(room.code).emit('guess-count-updated', {
-            guessed: room.guesses.size,
-            total: room.players.size,
+            guessed: room.guesses.size, total: room.players.size,
           });
           if (room.guesses.size >= room.players.size) {
-            clearInterval(room.timer);
-            room.timer = null;
+            clearInterval(room.timer); room.timer = null;
             setTimeout(() => endRound(room), 500);
           }
         }
@@ -405,7 +443,7 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect-twitch', () => {
     const room = rooms.get(currentRoom);
-    if (!room || room.hostId !== socket.id) return;
+    if (!room || room.hostSocketId !== socket.id) return;
     if (room.twitchClient) {
       room.twitchClient.disconnect().catch(() => {});
       room.twitchClient = null;
@@ -414,34 +452,31 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ── Host: Kick Player ──
   socket.on('kick-player', (data) => {
     const room = rooms.get(currentRoom);
-    if (!room || room.hostId !== socket.id) return;
+    if (!room || room.hostSocketId !== socket.id) return;
     for (const [id, player] of room.players) {
       if (player.name === data.name) {
         room.players.delete(id);
-        if (!id.startsWith('twitch:')) {
-          io.to(id).emit('kicked');
-        }
+        if (!id.startsWith('twitch:')) io.to(id).emit('kicked');
         io.to(room.code).emit('player-left', {
           name: player.name,
-          playerCount: room.players.size,
-          players: [...room.players.values()].map(p => ({ name: p.name, type: p.type, score: p.score })),
+          playerCount: room.players.size, players: getPlayersArray(room),
         });
         break;
       }
     }
   });
 
-  socket.on('leave-room', () => {
-    leaveRoom(socket);
-  });
-
-  socket.on('disconnect', () => {
-    leaveRoom(socket);
-  });
+  // ── Leave / Disconnect ──
+  socket.on('leave-room', () => leaveRoom(socket));
+  socket.on('disconnect', () => leaveRoom(socket));
 
   function leaveRoom(sock) {
+    if (watchingHostId) {
+      sock.leave(`hostwatch:${watchingHostId}`);
+    }
     if (!currentRoom) return;
     const room = rooms.get(currentRoom);
     if (!room) return;
@@ -457,8 +492,7 @@ io.on('connection', (socket) => {
       if (player) {
         io.to(currentRoom).emit('player-left', {
           name: player.name,
-          playerCount: room.players.size,
-          players: [...room.players.values()].map(p => ({ name: p.name, type: p.type, score: p.score })),
+          playerCount: room.players.size, players: getPlayersArray(room),
         });
       }
     } else if (role === 'overlay') {
@@ -484,23 +518,15 @@ function endRound(room) {
   });
 
   const numberLine = guessesArr.length > 0 ? buildNumberLine(ranked, room.correctAnswer) : null;
-
-  const scores = [...room.players.values()]
-    .map(p => ({ name: p.name, type: p.type, score: p.score }))
-    .sort((a, b) => b.score - a.score);
+  const scores = getPlayersArray(room).sort((a, b) => b.score - a.score);
 
   const resultData = {
     question: room.question,
     correctAnswer: room.correctAnswer,
     rankings: ranked.map(r => ({
-      name: r.playerName,
-      value: r.value,
-      difference: r.difference,
-      points: r.points,
-      rank: r.rank,
+      name: r.playerName, value: r.value, difference: r.difference, points: r.points, rank: r.rank,
     })),
-    numberLine,
-    scores,
+    numberLine, scores,
     roundNumber: room.currentRound,
     totalRounds: room.settings.totalRounds,
     isLastRound: room.currentRound >= room.settings.totalRounds,
@@ -511,11 +537,8 @@ function endRound(room) {
   for (const r of ranked) {
     if (!r.playerId.startsWith('twitch:')) {
       io.to(r.playerId).emit('your-result', {
-        yourGuess: r.value,
-        rank: r.rank,
-        difference: r.difference,
-        points: r.points,
-        totalScore: room.players.get(r.playerId)?.score || 0,
+        yourGuess: r.value, rank: r.rank, difference: r.difference,
+        points: r.points, totalScore: room.players.get(r.playerId)?.score || 0,
         totalPlayers: ranked.length,
       });
     }
@@ -524,13 +547,8 @@ function endRound(room) {
   for (const [id, player] of room.players) {
     if (!room.guesses.has(id) && !id.startsWith('twitch:')) {
       io.to(id).emit('your-result', {
-        yourGuess: null,
-        rank: null,
-        difference: null,
-        points: 0,
-        totalScore: player.score,
-        totalPlayers: ranked.length,
-        missed: true,
+        yourGuess: null, rank: null, difference: null, points: 0,
+        totalScore: player.score, totalPlayers: ranked.length, missed: true,
       });
     }
   }

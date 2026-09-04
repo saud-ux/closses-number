@@ -123,6 +123,7 @@ function submitGuess() {
   const val = $('p-guess-input').value.trim();
   if (!val) return toast('أدخل تخمينك');
   socket.emit('submit-guess', { guess: val });
+  try { navigator.vibrate && navigator.vibrate(50); } catch (_) {}
 }
 
 socket.on('guess-confirmed', data => {
@@ -154,6 +155,8 @@ socket.on('your-result', data => {
       rankBadge.className = `rank-badge rank-${data.rank}`;
       rankSection.classList.remove('hidden');
       sfx.play('win');
+      try { navigator.vibrate && navigator.vibrate([100, 50, 100]); } catch (_) {}
+      if (data.rank === 1) launchConfetti();
     } else {
       rankBadge.textContent = `المركز ${data.rank} من ${data.totalPlayers}`;
       rankBadge.className = 'rank-badge';
@@ -191,6 +194,8 @@ socket.on('game-over', data => {
     html += `<div style="font-size:2.5rem;margin-bottom:12px;">${medals[myIdx] || '🏅'}</div>`;
     html += `<p style="font-size:1.3rem;font-weight:700;">ترتيبك: ${myRank} من ${scores.length}</p>`;
     html += `<p style="font-size:1.5rem;font-weight:900;color:var(--gold);margin-top:4px;">${scores[myIdx].score} نقطة</p>`;
+
+    if (myIdx < 3) launchConfetti();
   }
   $('p-final-rank').innerHTML = html;
 
@@ -217,6 +222,58 @@ socket.on('game-reset', () => showScreen('p-screen-waiting'));
 
 // ── Error ────────────────────────────────────────
 socket.on('error-msg', data => toast(data.message));
+
+// ── Confetti ─────────────────────────────────────
+function launchConfetti() {
+  const canvas = $('confetti-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const pieces = [];
+  const confettiColors = ['#f1c40f', '#e74c3c', '#2ecc71', '#3498db', '#9b59b6', '#e67e22'];
+  for (let i = 0; i < 80; i++) {
+    pieces.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      w: Math.random() * 8 + 4,
+      h: Math.random() * 5 + 2,
+      color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+      vx: (Math.random() - 0.5) * 3,
+      vy: Math.random() * 2 + 1.5,
+      rot: Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 8,
+      opacity: 1,
+    });
+  }
+
+  let frame = 0;
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    frame++;
+    for (const p of pieces) {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.rotSpeed;
+      p.vy += 0.03;
+      if (frame > 100) p.opacity -= 0.012;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate((p.rot * Math.PI) / 180);
+      ctx.globalAlpha = Math.max(0, p.opacity);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    }
+    if (frame < 200 && pieces.some(p => p.opacity > 0)) {
+      requestAnimationFrame(animate);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+  requestAnimationFrame(animate);
+}
 
 // ── Helpers ──────────────────────────────────────
 function animateNumber(el, target) {
