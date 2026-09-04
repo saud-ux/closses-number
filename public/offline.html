@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>أقرب رقم - بدون نت</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
+
+    :root {
+      --bg: #0a0a1a;
+      --bg-card: rgba(20, 25, 50, 0.7);
+      --bg-card-solid: #141932;
+      --bg-input: rgba(15, 20, 55, 0.8);
+      --border: rgba(255,255,255,0.06);
+      --green: #2ecc71;
+      --green-glow: rgba(46,204,113,0.3);
+      --red: #e74c3c;
+      --blue: #3498db;
+      --gold: #f1c40f;
+      --gold-glow: rgba(241,196,15,0.25);
+      --text: #f0f0f5;
+      --text-dim: rgba(200,200,220,0.6);
+      --accent: #e94560;
+      --purple: #9b59b6;
+      --radius: 20px;
+      --radius-sm: 12px;
+      --shadow: 0 8px 40px rgba(0,0,0,0.4);
+      --glass: blur(16px);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Tajawal', -apple-system, 'Segoe UI', sans-serif;
+      color: var(--text);
+      direction: rtl;
+      min-height: 100vh;
+      min-height: 100dvh;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(52,152,219,0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(155,89,182,0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(233,69,96,0.05) 0%, transparent 50%);
+      background-attachment: fixed;
+      overflow-x: hidden;
+    }
+
+    .container { max-width: 520px; margin: 0 auto; padding: 16px; }
+
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: var(--glass);
+      -webkit-backdrop-filter: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .game-header { text-align: center; padding: 20px 0 8px; }
+    .game-header h1 {
+      font-size: 2.2rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--accent) 50%, var(--purple) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .game-header .subtitle { color: var(--text-dim); font-size: 0.85rem; margin-top: 2px; }
+    .offline-badge {
+      display: inline-block;
+      background: rgba(46,204,113,0.12);
+      color: var(--green);
+      padding: 3px 12px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-top: 6px;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; animation: fadeIn 0.3s ease; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+    @keyframes bounceIn { 0% { transform: scale(0); } 60% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    @keyframes timerPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(231,76,60,0.3); } 50% { box-shadow: 0 0 0 8px rgba(231,76,60,0); } }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 14px 32px; border: none; border-radius: var(--radius-sm);
+      font-family: inherit; font-size: 1.1rem; font-weight: 700; cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.25s; position: relative; overflow: hidden;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+    .btn-primary { background: linear-gradient(135deg, #2ecc71, #27ae60); color: #fff; }
+    .btn-gold { background: linear-gradient(135deg, var(--gold), #f39c12); color: #1a1a2e; }
+    .btn-secondary { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid var(--border); }
+    .btn-accent { background: linear-gradient(135deg, var(--accent), #c0392b); color: #fff; }
+    .btn-sm { padding: 8px 16px; font-size: 0.85rem; }
+    .btn-block { width: 100%; }
+
+    input[type="text"], input[type="number"], select {
+      width: 100%; padding: 14px 16px;
+      background: var(--bg-input); border: 1.5px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 1.1rem;
+      outline: none; transition: border-color 0.25s;
+    }
+    input:focus { border-color: rgba(52,152,219,0.5); box-shadow: 0 0 0 3px rgba(52,152,219,0.1); }
+    input[type="number"] { direction: ltr; text-align: center; font-size: 1.5rem; font-weight: 700; -moz-appearance: textfield; }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    select { cursor: pointer; -webkit-appearance: none; direction: rtl; }
+    label { display: block; margin-bottom: 6px; font-weight: 500; color: var(--text-dim); font-size: 0.9rem; }
+    .form-group { margin-bottom: 16px; }
+
+    .section-title {
+      font-size: 0.85rem; color: var(--text-dim); margin-bottom: 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::before, .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .text-center { text-align: center; }
+    .mt-12 { margin-top: 12px; }
+    .mt-16 { margin-top: 16px; }
+    .mt-20 { margin-top: 20px; }
+    .hidden { display: none !important; }
+
+    .player-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+      padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; margin: 3px;
+    }
+    .player-tag .remove-player {
+      background: none; border: none; color: var(--red); cursor: pointer;
+      font-size: 0.7rem; padding: 0 2px; opacity: 0.5;
+    }
+    .player-tag .remove-player:hover { opacity: 1; }
+
+    .timer-bar {
+      width: 100%; height: 8px; background: rgba(255,255,255,0.06);
+      border-radius: 4px; overflow: hidden; margin: 16px 0;
+    }
+    .timer-bar-fill {
+      height: 100%; border-radius: 4px; transition: width 1s linear, background 0.3s;
+      background: var(--green);
+    }
+    .timer-bar-fill.warning { background: var(--gold); }
+    .timer-bar-fill.danger { background: var(--red); }
+
+    .timer-num {
+      font-size: 3rem; font-weight: 900; text-align: center; direction: ltr;
+      text-shadow: 0 0 20px rgba(0,0,0,0.3);
+    }
+    .timer-num.warning { color: var(--gold); }
+    .timer-num.danger { color: var(--red); animation: timerPulse 0.5s ease-in-out infinite; }
+
+    .question-display {
+      font-size: 1.4rem; font-weight: 700; text-align: center;
+      padding: 16px; line-height: 1.6;
+    }
+
+    .answer-reveal {
+      font-size: 3rem; font-weight: 900; text-align: center;
+      color: var(--gold); direction: ltr;
+      text-shadow: 0 0 30px var(--gold-glow);
+      animation: bounceIn 0.5s ease;
+    }
+
+    .guess-big-input {
+      font-size: 2.8rem !important; text-align: center !important;
+      padding: 20px !important; max-width: 280px; margin: 0 auto;
+      border-radius: 16px !important; background: rgba(15,20,55,0.9) !important;
+      border: 2px solid rgba(241,196,15,0.15) !important;
+    }
+    .guess-big-input:focus { border-color: rgba(241,196,15,0.4) !important; box-shadow: 0 0 0 4px var(--gold-glow) !important; }
+
+    .player-guess-header {
+      font-size: 1.5rem; font-weight: 800; text-align: center;
+      color: var(--gold); margin-bottom: 4px;
+    }
+
+    .ranking-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; border-radius: var(--radius-sm);
+      margin-bottom: 6px; font-size: 1rem;
+      animation: slideUp 0.4s ease backwards; border: 1px solid transparent;
+    }
+    .ranking-item:nth-child(1) { background: rgba(46,204,113,0.1); border-color: rgba(46,204,113,0.15); animation-delay:0.1s; }
+    .ranking-item:nth-child(2) { background: rgba(52,152,219,0.08); border-color: rgba(52,152,219,0.1); animation-delay:0.2s; }
+    .ranking-item:nth-child(3) { background: rgba(155,89,182,0.08); border-color: rgba(155,89,182,0.1); animation-delay:0.3s; }
+    .ranking-item .medal { font-size: 1.4rem; min-width: 30px; text-align: center; }
+    .ranking-item .r-name { flex: 1; font-weight: 700; }
+    .ranking-item .r-value { direction: ltr; color: var(--text-dim); font-size: 0.95rem; }
+    .ranking-item .r-diff { direction: ltr; font-size: 0.8rem; color: var(--text-dim); }
+    .ranking-item .r-pts { color: var(--green); font-weight: 700; font-size: 0.85rem; min-width: 50px; text-align: left; }
+
+    .score-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 12px; border-radius: 8px; margin-bottom: 3px; font-size: 0.9rem;
+    }
+    .score-row:nth-child(2) { background: rgba(241,196,15,0.06); }
+    .score-row .s-rank { min-width: 22px; color: var(--text-dim); font-weight: 700; }
+    .score-row .s-name { flex: 1; font-weight: 500; }
+    .score-row .s-score { font-weight: 700; color: var(--gold); direction: ltr; }
+
+    .number-line-container { position: relative; margin: 20px 0; padding: 36px 24px 56px; }
+    .number-line { position: relative; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; direction: ltr; }
+    .nl-correct { position: absolute; top: 50%; transform: translate(-50%, -50%); z-index: 10; display: flex; flex-direction: column; align-items: center; }
+    .nl-correct .star { font-size: 1.4rem; }
+    .nl-correct .nl-val { position: absolute; top: -26px; font-size: 0.75rem; color: var(--gold); font-weight: 700; white-space: nowrap; }
+    .nl-point { position: absolute; top: 50%; transform: translate(-50%, -50%); z-index: 5; }
+    .nl-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.3); }
+    .nl-point .nl-label { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; white-space: nowrap; color: var(--text-dim); }
+    .nl-point .nl-val { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 0.65rem; white-space: nowrap; color: var(--text-dim); }
+
+    .podium { display: flex; align-items: flex-end; justify-content: center; gap: 12px; margin: 20px 0; min-height: 180px; }
+    .podium-item { text-align: center; animation: slideUp 0.5s ease backwards; }
+    .podium-item:nth-child(1) { animation-delay: 0.3s; order: 2; }
+    .podium-item:nth-child(2) { animation-delay: 0.1s; order: 1; }
+    .podium-item:nth-child(3) { animation-delay: 0.5s; order: 3; }
+    .podium-name { font-weight: 700; font-size: 1rem; margin-bottom: 8px; }
+    .podium-bar { width: 90px; border-radius: 12px 12px 0 0; display: flex; align-items: flex-start; justify-content: center; font-size: 1.5rem; padding-top: 10px; color: #fff; }
+    .podium-score { font-size: 0.9rem; color: var(--gold); margin-top: 6px; font-weight: 700; }
+
+    .category-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .cat-tab {
+      padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+      font-family: inherit; cursor: pointer; border: 1px solid rgba(255,255,255,0.08);
+      background: transparent; color: var(--text-dim); transition: all 0.2s;
+    }
+    .cat-tab:hover { background: rgba(255,255,255,0.05); }
+    .cat-tab.active { background: rgba(52,152,219,0.15); border-color: rgba(52,152,219,0.3); color: var(--blue); }
+
+    .question-bank { max-height: 300px; overflow-y: auto; }
+    .question-bank::-webkit-scrollbar { width: 5px; }
+    .question-bank::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    .bank-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px; border-radius: 10px; gap: 10px; transition: background 0.15s;
+    }
+    .bank-item:hover { background: rgba(255,255,255,0.04); }
+    .bank-item.used { opacity: 0.25; pointer-events: none; }
+    .bank-item .q-text { flex: 1; font-size: 0.85rem; }
+    .bank-item .q-emoji { font-size: 1.1rem; min-width: 26px; text-align: center; }
+
+    .confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9998; }
+
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--bg-card-solid); color: var(--text);
+      padding: 12px 28px; border-radius: var(--radius-sm);
+      font-family: inherit; font-weight: 600;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+      border: 1px solid var(--border); z-index: 9999;
+      transition: transform 0.3s ease; pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    .pass-device-msg {
+      text-align: center; padding: 20px;
+      font-size: 1.1rem; color: var(--text-dim);
+    }
+    .pass-device-msg .big-icon { font-size: 3rem; margin-bottom: 8px; }
+
+    @media (max-width: 600px) {
+      .game-header h1 { font-size: 1.8rem; }
+      .settings-grid { grid-template-columns: 1fr; }
+      .container { padding: 10px; }
+      .card { padding: 16px; border-radius: 16px; }
+      .podium-bar { width: 75px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas class="confetti-canvas" id="confetti-canvas"></canvas>
+
+  <div class="container">
+    <div class="game-header">
+      <h1>🎯 أقرب رقم</h1>
+      <p class="subtitle">لعبة التخمين التفاعلية</p>
+      <div class="offline-badge">✈️ وضع بدون نت</div>
+    </div>
+
+    <!-- ══ SETUP: Players + Settings ══ -->
+    <div id="screen-setup" class="screen active">
+      <div class="card">
+        <div class="section-title">أضف اللاعبين</div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="add-player-name" placeholder="اسم اللاعب" maxlength="20" style="flex:1">
+          <button class="btn btn-primary btn-sm" id="btn-add-player">أضف</button>
+        </div>
+        <div id="players-area" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:4px;"></div>
+        <p id="player-count-label" style="color:var(--text-dim);font-size:0.8rem;margin-top:8px;text-align:center;"></p>
+      </div>
+
+      <div class="card">
+        <div class="section-title">إعدادات</div>
+        <div class="settings-grid">
+          <div class="form-group">
+            <label>عدد الجولات</label>
+            <select id="total-rounds">
+              <option value="3">3</option>
+              <option value="5" selected>5</option>
+              <option value="10">10</option>
+              <option value="15">15</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>وقت التخمين</label>
+            <select id="round-duration">
+              <option value="10">10 ثانية</option>
+              <option value="15" selected>15 ثانية</option>
+              <option value="20">20 ثانية</option>
+              <option value="30">30 ثانية</option>
+              <option value="0">بدون وقت</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <button id="btn-start" class="btn btn-primary btn-block" disabled style="font-size:1.2rem;">
+        ابدأ اللعبة
+      </button>
+    </div>
+
+    <!-- ══ HOST: Enter Question ══ -->
+    <div id="screen-question" class="screen">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <span style="font-weight:700;" id="round-label-q"></span>
+          <span style="color:var(--text-dim);font-size:0.85rem;" id="score-peek"></span>
+        </div>
+        <div class="form-group">
+          <label>السؤال</label>
+          <input type="text" id="q-input" placeholder="اكتب السؤال...">
+        </div>
+        <div class="form-group">
+          <label>الجواب الصحيح (رقم)</label>
+          <input type="number" id="a-input" placeholder="الرقم" inputmode="numeric">
+        </div>
+        <button id="btn-go-round" class="btn btn-primary btn-block" disabled>ابدأ الجولة</button>
+      </div>
+
+      <div class="card">
+        <div class="section-title">بنك الأسئلة</div>
+        <div class="category-tabs" id="cat-tabs"></div>
+        <div class="question-bank" id="q-bank"></div>
+      </div>
+    </div>
+
+    <!-- ══ SHOW QUESTION (everyone sees) ══ -->
+    <div id="screen-show-question" class="screen">
+      <div class="card text-center">
+        <p style="color:var(--text-dim);margin-bottom:8px;" id="round-label-show"></p>
+        <div class="question-display" id="q-display"></div>
+        <div class="timer-num" id="timer-display"></div>
+        <div class="timer-bar"><div class="timer-bar-fill" id="timer-bar-fill"></div></div>
+        <p style="color:var(--text-dim);font-size:0.9rem;margin-top:8px;">الكل يفكر...</p>
+        <button id="btn-start-guessing" class="btn btn-gold btn-block mt-16" style="font-size:1.1rem;">
+          ابدأ التخمين ✋
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ PLAYER GUESS (pass device) ══ -->
+    <div id="screen-guess" class="screen">
+      <div class="card">
+        <div class="pass-device-msg" id="pass-msg">
+          <div class="big-icon">📱</div>
+          <p>مرر الجوال لـ <strong id="current-player-name"></strong></p>
+          <button class="btn btn-primary mt-16" id="btn-ready">أنا جاهز</button>
+        </div>
+
+        <div id="guess-form" class="hidden">
+          <div class="player-guess-header" id="guess-header"></div>
+          <p style="color:var(--text-dim);font-size:0.85rem;text-align:center;margin-bottom:12px;" id="guess-q-text"></p>
+          <div style="text-align:center;">
+            <input type="number" id="guess-input" class="guess-big-input" inputmode="numeric" placeholder="؟">
+            <button id="btn-submit-guess" class="btn btn-primary btn-block mt-12" style="font-size:1.2rem;">أرسل</button>
+            <p style="color:var(--text-dim);font-size:0.75rem;margin-top:8px;">⚠️ تخمين واحد فقط!</p>
+          </div>
+        </div>
+
+        <div id="guess-done" class="hidden text-center" style="padding:20px;">
+          <div style="font-size:2rem;">✅</div>
+          <p style="font-size:1.1rem;font-weight:700;margin-top:8px;">تم!</p>
+        </div>
+      </div>
+
+      <div id="skip-section" class="hidden">
+        <button class="btn btn-secondary btn-block btn-sm" id="btn-skip-player">⏭️ تخطي هذا اللاعب</button>
+      </div>
+    </div>
+
+    <!-- ══ RESULTS ══ -->
+    <div id="screen-results" class="screen">
+      <div class="card text-center" style="animation: scaleIn 0.4s ease;">
+        <p style="color:var(--text-dim);margin-bottom:4px;" id="round-label-result"></p>
+        <div class="question-display" id="result-q" style="font-size:1.2rem;padding:8px;"></div>
+        <div class="answer-reveal" id="result-answer"></div>
+      </div>
+
+      <div class="card" style="animation: slideUp 0.5s ease;">
+        <div class="section-title">الترتيب</div>
+        <div id="rankings-list"></div>
+        <p id="no-guesses-msg" class="hidden text-center" style="color:var(--text-dim);padding:12px;">لا يوجد تخمينات</p>
+      </div>
+
+      <div class="card" id="nl-card" style="animation: slideUp 0.5s ease 0.1s backwards;">
+        <div class="section-title">خط الأرقام</div>
+        <div class="number-line-container" id="nl-container"></div>
+      </div>
+
+      <div class="card" style="animation: slideUp 0.5s ease 0.15s backwards;">
+        <div id="scoreboard-area"></div>
+      </div>
+
+      <button id="btn-next" class="btn btn-gold btn-block mt-12" style="font-size:1.1rem;"></button>
+    </div>
+
+    <!-- ══ GAME OVER ══ -->
+    <div id="screen-gameover" class="screen">
+      <div class="card text-center" style="animation: scaleIn 0.4s ease;">
+        <h2 style="font-size:1.8rem;margin-bottom:16px;">🏆 النتيجة النهائية</h2>
+        <div class="podium" id="podium-area"></div>
+      </div>
+      <div class="card" style="animation: slideUp 0.5s ease;">
+        <div id="final-scoreboard"></div>
+      </div>
+      <button id="btn-restart" class="btn btn-primary btn-block mt-20" style="font-size:1.1rem;">
+        العب مرة ثانية
+      </button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const esc = s => { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; };
+
+    // ── State ──
+    let players = [];
+    let scores = {};
+    let totalRounds = 5;
+    let roundDuration = 15;
+    let currentRound = 0;
+    let currentQuestion = '';
+    let correctAnswer = 0;
+    let guesses = [];
+    let currentPlayerIdx = 0;
+    let timerInterval = null;
+    let usedQuestions = new Set();
+    let activeCategory = 'الكل';
+
+    // ── Question Bank ──
+    const questionBank = [
+      { category: 'جغرافيا', emoji: '🌍', question: 'كم عدد دول العالم؟', answer: 195 },
+      { category: 'جغرافيا', emoji: '🛣️', question: 'كم المسافة بين الرياض وجدة بالكيلومتر؟', answer: 949 },
+      { category: 'جغرافيا', emoji: '🗺️', question: 'كم مساحة السعودية بالكيلومتر المربع؟', answer: 2149690 },
+      { category: 'جغرافيا', emoji: '👥', question: 'كم عدد سكان مصر بالمليون (تقريباً)؟', answer: 105 },
+      { category: 'جغرافيا', emoji: '🏙️', question: 'كم ارتفاع برج خليفة بالمتر؟', answer: 828 },
+      { category: 'جغرافيا', emoji: '🏝️', question: 'كم عدد جزر إندونيسيا؟', answer: 17508 },
+      { category: 'جغرافيا', emoji: '🌊', question: 'كم عمق أعمق نقطة في المحيط بالمتر؟', answer: 10994 },
+      { category: 'جغرافيا', emoji: '🏔️', question: 'كم ارتفاع جبل إيفرست بالمتر؟', answer: 8849 },
+      { category: 'علوم', emoji: '🦴', question: 'كم عدد عظام جسم الإنسان البالغ؟', answer: 206 },
+      { category: 'علوم', emoji: '🦷', question: 'كم عدد أسنان الإنسان البالغ؟', answer: 32 },
+      { category: 'علوم', emoji: '🌡️', question: 'كم درجة حرارة الإنسان الطبيعية؟', answer: 37 },
+      { category: 'علوم', emoji: '🧬', question: 'كم عدد كروموسومات الإنسان؟', answer: 46 },
+      { category: 'علوم', emoji: '🌙', question: 'كم المسافة بين الأرض والقمر بالكيلومتر؟', answer: 384400 },
+      { category: 'علوم', emoji: '🪐', question: 'كم عدد كواكب المجموعة الشمسية؟', answer: 8 },
+      { category: 'علوم', emoji: '💡', question: 'كم سرعة الضوء بالكيلومتر في الثانية؟', answer: 299792 },
+      { category: 'علوم', emoji: '❤️', question: 'كم مرة ينبض قلب الإنسان في الدقيقة (تقريباً)؟', answer: 72 },
+      { category: 'رياضة', emoji: '⚽', question: 'كم عدد لاعبي فريق كرة القدم؟', answer: 11 },
+      { category: 'رياضة', emoji: '🏟️', question: 'كم طول ملعب كرة القدم بالمتر (تقريباً)؟', answer: 105 },
+      { category: 'رياضة', emoji: '🏆', question: 'في أي سنة أُقيمت أول بطولة كأس عالم؟', answer: 1930 },
+      { category: 'رياضة', emoji: '🇧🇷', question: 'كم عدد بطولات كأس العالم اللي فازت فيها البرازيل؟', answer: 5 },
+      { category: 'رياضة', emoji: '🏀', question: 'كم ارتفاع سلة كرة السلة بالسنتيمتر؟', answer: 305 },
+      { category: 'تاريخ', emoji: '📞', question: 'في أي سنة ميلادية اخترع الهاتف؟', answer: 1876 },
+      { category: 'تاريخ', emoji: '🚀', question: 'في أي سنة هبط أول إنسان على القمر؟', answer: 1969 },
+      { category: 'تاريخ', emoji: '🇸🇦', question: 'في أي سنة تأسست المملكة العربية السعودية؟', answer: 1932 },
+      { category: 'تاريخ', emoji: '🌐', question: 'في أي سنة اخترعت شبكة الإنترنت؟', answer: 1983 },
+      { category: 'إسلامية', emoji: '📖', question: 'كم عدد سور القرآن الكريم؟', answer: 114 },
+      { category: 'إسلامية', emoji: '📜', question: 'كم عدد آيات سورة البقرة؟', answer: 286 },
+      { category: 'إسلامية', emoji: '✨', question: 'كم عدد أحرف البسملة؟', answer: 19 },
+      { category: 'أرقام', emoji: '⏱️', question: 'كم ثانية في اليوم؟', answer: 86400 },
+      { category: 'أرقام', emoji: '🕐', question: 'كم ساعة في السنة؟', answer: 8760 },
+      { category: 'أرقام', emoji: '📅', question: 'كم يوم في 4 سنوات (مع السنة الكبيسة)؟', answer: 1461 },
+      { category: 'أرقام', emoji: '🔢', question: 'كم عدد الدقائق في الأسبوع؟', answer: 10080 },
+    ];
+
+    // ── Sound ──
+    const sfx = {
+      ctx: null,
+      init() { if (!this.ctx) try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(_){} },
+      _tone(f, d, v=0.12, w='sine') {
+        if (!this.ctx) return;
+        const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+        o.type = w; o.frequency.value = f;
+        g.gain.setValueAtTime(v, this.ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + d);
+        o.connect(g).connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime + d);
+      },
+      tick() { this._tone(800, 0.06, 0.06); },
+      pop() { this._tone(600, 0.1, 0.1); },
+      result() { this._tone(784,0.15,0.12); setTimeout(()=>this._tone(988,0.15,0.12),150); setTimeout(()=>this._tone(1175,0.3,0.15),300); },
+      win() { [523,659,784,1047].forEach((f,i)=>setTimeout(()=>this._tone(f,0.25,0.12),i*180)); },
+    };
+    document.addEventListener('click', () => sfx.init(), { once: true });
+    document.addEventListener('touchstart', () => sfx.init(), { once: true });
+
+    // ── Screens ──
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      $(id).classList.add('active');
+    }
+    function toast(msg) {
+      const t = $('toast'); t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    // ══════════════════════════════════════════════
+    // SETUP SCREEN
+    // ══════════════════════════════════════════════
+    function renderPlayers() {
+      const area = $('players-area');
+      area.innerHTML = players.map((p, i) =>
+        `<span class="player-tag">${esc(p)} <button class="remove-player" onclick="removePlayer(${i})">✕</button></span>`
+      ).join('');
+      $('player-count-label').textContent = players.length ? `${players.length} لاعب` : '';
+      $('btn-start').disabled = players.length < 2;
+    }
+
+    $('btn-add-player').onclick = () => addPlayer();
+    $('add-player-name').addEventListener('keydown', e => { if (e.key === 'Enter') addPlayer(); });
+
+    function addPlayer() {
+      const name = $('add-player-name').value.trim();
+      if (!name) return toast('اكتب اسم اللاعب');
+      if (players.includes(name)) return toast('الاسم موجود');
+      players.push(name);
+      $('add-player-name').value = '';
+      $('add-player-name').focus();
+      renderPlayers();
+    }
+
+    window.removePlayer = (i) => { players.splice(i, 1); renderPlayers(); };
+
+    $('btn-start').onclick = () => {
+      sfx.init();
+      totalRounds = parseInt($('total-rounds').value);
+      roundDuration = parseInt($('round-duration').value);
+      currentRound = 0;
+      scores = {};
+      players.forEach(p => scores[p] = 0);
+      usedQuestions.clear();
+      goToQuestion();
+    };
+
+    // ══════════════════════════════════════════════
+    // QUESTION ENTRY
+    // ══════════════════════════════════════════════
+    function goToQuestion() {
+      currentRound++;
+      $('round-label-q').textContent = `الجولة ${currentRound}/${totalRounds}`;
+      const leader = Object.entries(scores).sort((a,b)=>b[1]-a[1])[0];
+      $('score-peek').textContent = leader && leader[1] > 0 ? `${esc(leader[0])}: ${leader[1]}` : '';
+      $('q-input').value = '';
+      $('a-input').value = '';
+      $('btn-go-round').disabled = true;
+      showScreen('screen-question');
+      renderBank();
+      $('q-input').focus();
+    }
+
+    $('q-input').oninput = checkQ;
+    $('a-input').oninput = checkQ;
+    function checkQ() {
+      const q = $('q-input').value.trim();
+      const a = $('a-input').value.trim();
+      $('btn-go-round').disabled = !(q && a && !isNaN(parseFloat(a)));
+    }
+
+    function renderBank() {
+      const cats = ['الكل', ...new Set(questionBank.map(q => q.category))];
+      $('cat-tabs').innerHTML = cats.map(c =>
+        `<button class="cat-tab ${c === activeCategory ? 'active' : ''}" onclick="filterCat('${c}')">${c}</button>`
+      ).join('');
+
+      const filtered = activeCategory === 'الكل' ? questionBank : questionBank.filter(q => q.category === activeCategory);
+      $('q-bank').innerHTML = filtered.map((q, i) => {
+        const idx = questionBank.indexOf(q);
+        const used = usedQuestions.has(idx);
+        return `<div class="bank-item ${used ? 'used' : ''}">
+          <span class="q-emoji">${q.emoji}</span>
+          <span class="q-text">${esc(q.question)}</span>
+          ${used ? '<span style="font-size:0.75rem;color:var(--text-dim);">✓</span>'
+            : `<button class="btn btn-sm btn-secondary" onclick="pickQ(${idx})">استخدم</button>`}
+        </div>`;
+      }).join('');
+    }
+
+    window.filterCat = (cat) => { activeCategory = cat; renderBank(); };
+    window.pickQ = (idx) => {
+      const q = questionBank[idx];
+      $('q-input').value = q.question;
+      $('a-input').value = q.answer;
+      $('btn-go-round').disabled = false;
+    };
+
+    $('btn-go-round').onclick = () => {
+      currentQuestion = $('q-input').value.trim();
+      correctAnswer = parseFloat($('a-input').value);
+      const qIdx = questionBank.findIndex(q => q.question === currentQuestion);
+      if (qIdx >= 0) usedQuestions.add(qIdx);
+      guesses = [];
+      showQuestionScreen();
+    };
+
+    // ══════════════════════════════════════════════
+    // SHOW QUESTION
+    // ══════════════════════════════════════════════
+    function showQuestionScreen() {
+      $('round-label-show').textContent = `الجولة ${currentRound}/${totalRounds}`;
+      $('q-display').textContent = currentQuestion;
+      showScreen('screen-show-question');
+
+      if (roundDuration > 0) {
+        let remaining = roundDuration;
+        $('timer-display').textContent = remaining;
+        $('timer-display').className = 'timer-num';
+        $('timer-bar-fill').style.width = '100%';
+        $('timer-bar-fill').className = 'timer-bar-fill';
+
+        timerInterval = setInterval(() => {
+          remaining--;
+          $('timer-display').textContent = remaining;
+          $('timer-bar-fill').style.width = ((remaining / roundDuration) * 100) + '%';
+
+          if (remaining <= 3) {
+            $('timer-display').className = 'timer-num danger';
+            $('timer-bar-fill').className = 'timer-bar-fill danger';
+            sfx.tick();
+          } else if (remaining <= 5) {
+            $('timer-display').className = 'timer-num warning';
+            $('timer-bar-fill').className = 'timer-bar-fill warning';
+            sfx.tick();
+          }
+
+          if (remaining <= 0) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            startGuessing();
+          }
+        }, 1000);
+      } else {
+        $('timer-display').textContent = '∞';
+        $('timer-bar-fill').style.width = '100%';
+      }
+    }
+
+    $('btn-start-guessing').onclick = () => {
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+      startGuessing();
+    };
+
+    // ══════════════════════════════════════════════
+    // PLAYER GUESSING (pass device)
+    // ══════════════════════════════════════════════
+    function startGuessing() {
+      currentPlayerIdx = 0;
+      showGuessForPlayer();
+    }
+
+    function showGuessForPlayer() {
+      if (currentPlayerIdx >= players.length) {
+        showResults();
+        return;
+      }
+      showScreen('screen-guess');
+      $('pass-msg').classList.remove('hidden');
+      $('guess-form').classList.add('hidden');
+      $('guess-done').classList.add('hidden');
+      $('skip-section').classList.remove('hidden');
+      $('current-player-name').textContent = players[currentPlayerIdx];
+    }
+
+    $('btn-ready').onclick = () => {
+      $('pass-msg').classList.add('hidden');
+      $('guess-form').classList.remove('hidden');
+      $('skip-section').classList.add('hidden');
+      $('guess-header').textContent = players[currentPlayerIdx];
+      $('guess-q-text').textContent = currentQuestion;
+      $('guess-input').value = '';
+      setTimeout(() => $('guess-input').focus(), 200);
+    };
+
+    $('btn-submit-guess').onclick = () => submitGuess();
+    $('guess-input').addEventListener('keydown', e => { if (e.key === 'Enter') submitGuess(); });
+
+    function submitGuess() {
+      const val = $('guess-input').value.trim();
+      if (!val || isNaN(parseFloat(val))) return toast('أدخل رقم');
+      sfx.pop();
+      try { navigator.vibrate && navigator.vibrate(50); } catch(_){}
+
+      guesses.push({ name: players[currentPlayerIdx], value: parseFloat(val) });
+      $('guess-form').classList.add('hidden');
+      $('guess-done').classList.remove('hidden');
+
+      setTimeout(() => {
+        currentPlayerIdx++;
+        showGuessForPlayer();
+      }, 800);
+    }
+
+    $('btn-skip-player').onclick = () => {
+      currentPlayerIdx++;
+      showGuessForPlayer();
+    };
+
+    // ══════════════════════════════════════════════
+    // RESULTS
+    // ══════════════════════════════════════════════
+    function showResults() {
+      sfx.result();
+      $('round-label-result').textContent = `الجولة ${currentRound}/${totalRounds}`;
+      $('result-q').textContent = currentQuestion;
+      animateNumber($('result-answer'), correctAnswer);
+
+      const ranked = guesses
+        .map(g => ({ ...g, difference: Math.abs(g.value - correctAnswer) }))
+        .sort((a, b) => a.difference - b.difference);
+
+      ranked.forEach((r, i) => {
+        const pts = i === 0 ? 3 : i === 1 ? 2 : i === 2 ? 1 : 0;
+        r.points = pts;
+        scores[r.name] = (scores[r.name] || 0) + pts;
+      });
+
+      if (ranked.length === 0) {
+        $('rankings-list').innerHTML = '';
+        $('no-guesses-msg').classList.remove('hidden');
+        $('nl-card').classList.add('hidden');
+      } else {
+        $('no-guesses-msg').classList.add('hidden');
+        $('nl-card').classList.remove('hidden');
+        const medals = ['🥇', '🥈', '🥉'];
+        $('rankings-list').innerHTML = ranked.map((r, i) =>
+          `<div class="ranking-item" style="animation-delay:${i*0.08}s">
+            <span class="medal">${medals[i] || (i+1)}</span>
+            <span class="r-name">${esc(r.name)}</span>
+            <span class="r-value">${r.value}</span>
+            <span class="r-diff">(فرق: ${r.difference})</span>
+            <span class="r-pts">${r.points > 0 ? '+'+r.points : ''}</span>
+          </div>`
+        ).join('');
+
+        renderNumberLine(ranked);
+      }
+
+      renderScoreboard($('scoreboard-area'));
+
+      const btn = $('btn-next');
+      if (currentRound >= totalRounds) {
+        btn.textContent = 'النتيجة النهائية 🏆';
+        btn.onclick = showGameOver;
+      } else {
+        btn.textContent = 'الجولة التالية ←';
+        btn.onclick = goToQuestion;
+      }
+
+      showScreen('screen-results');
+    }
+
+    function renderNumberLine(ranked) {
+      const values = ranked.map(r => r.value).concat(correctAnswer);
+      const min = Math.min(...values); const max = Math.max(...values);
+      const range = max - min || 1;
+      const pad = range * 0.12;
+      const lMin = min - pad; const lMax = max + pad; const lRange = lMax - lMin;
+      const correctPos = ((correctAnswer - lMin) / lRange) * 100;
+
+      const colors = ['#2ecc71','#3498db','#9b59b6','#e67e22','#e74c3c','#1abc9c','#e91e63','#ff9800'];
+      let html = '<div class="number-line">';
+      html += `<div class="nl-correct" style="left:${correctPos}%"><span class="nl-val">${correctAnswer}</span><span class="star">⭐</span></div>`;
+      ranked.slice(0, 8).forEach((r, i) => {
+        const pos = ((r.value - lMin) / lRange) * 100;
+        html += `<div class="nl-point" style="left:${pos}%"><div class="nl-dot" style="background:${colors[i%colors.length]}"></div><span class="nl-val">${r.value}</span><span class="nl-label">${esc(r.name)}</span></div>`;
+      });
+      html += '</div>';
+      $('nl-container').innerHTML = html;
+    }
+
+    function renderScoreboard(container) {
+      const sorted = Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+      let html = '<h3 style="margin-bottom:10px;font-size:1rem;color:var(--text-dim);">🏅 لوحة النقاط</h3>';
+      sorted.forEach(([name, score], i) => {
+        html += `<div class="score-row"><span class="s-rank">${i+1}</span><span class="s-name">${esc(name)}</span><span class="s-score">${score}</span></div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    // ══════════════════════════════════════════════
+    // GAME OVER
+    // ══════════════════════════════════════════════
+    function showGameOver() {
+      sfx.win();
+      const sorted = Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+      const medals = ['🥇','🥈','🥉'];
+      const heights = [150, 110, 80];
+      const bgColors = ['linear-gradient(180deg,#f1c40f,#e67e22)','linear-gradient(180deg,#3498db,#2980b9)','linear-gradient(180deg,#9b59b6,#8e44ad)'];
+
+      let podiumHtml = '';
+      sorted.slice(0, 3).forEach(([name, score], i) => {
+        podiumHtml += `<div class="podium-item"><div class="podium-name">${esc(name)}</div><div class="podium-bar" style="height:${heights[i]}px;background:${bgColors[i]}">${medals[i]}</div><div class="podium-score">${score} نقطة</div></div>`;
+      });
+      $('podium-area').innerHTML = podiumHtml;
+      renderScoreboard($('final-scoreboard'));
+      showScreen('screen-gameover');
+      launchConfetti();
+    }
+
+    $('btn-restart').onclick = () => {
+      currentRound = 0;
+      scores = {};
+      players.forEach(p => scores[p] = 0);
+      usedQuestions.clear();
+      goToQuestion();
+    };
+
+    // ── Confetti ──
+    function launchConfetti() {
+      const canvas = $('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+      const pieces = [];
+      const colors = ['#f1c40f','#e74c3c','#2ecc71','#3498db','#9b59b6','#e67e22'];
+      for (let i = 0; i < 100; i++) {
+        pieces.push({
+          x: Math.random()*canvas.width, y: Math.random()*canvas.height-canvas.height,
+          w: Math.random()*10+4, h: Math.random()*5+2,
+          color: colors[Math.floor(Math.random()*colors.length)],
+          vx: (Math.random()-0.5)*3, vy: Math.random()*2.5+1.5,
+          rot: Math.random()*360, rotSpeed: (Math.random()-0.5)*8, opacity: 1,
+        });
+      }
+      let frame = 0;
+      function animate() {
+        ctx.clearRect(0,0,canvas.width,canvas.height); frame++;
+        for (const p of pieces) {
+          p.x+=p.vx; p.y+=p.vy; p.rot+=p.rotSpeed; p.vy+=0.03;
+          if (frame>120) p.opacity-=0.01;
+          ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+          ctx.globalAlpha=Math.max(0,p.opacity); ctx.fillStyle=p.color;
+          ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore();
+        }
+        if (frame<240 && pieces.some(p=>p.opacity>0)) requestAnimationFrame(animate);
+        else ctx.clearRect(0,0,canvas.width,canvas.height);
+      }
+      requestAnimationFrame(animate);
+    }
+
+    // ── Animate Number ──
+    function animateNumber(el, target) {
+      const duration = 1000; const start = performance.now();
+      const abs = Math.abs(target); const sign = target < 0 ? '-' : '';
+      function step(now) {
+        const p = Math.min((now-start)/duration, 1);
+        const e = 1 - Math.pow(1-p, 3);
+        el.textContent = sign + Math.round(abs*e).toLocaleString();
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    renderPlayers();
+  </script>
+</body>
+</html>
