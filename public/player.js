@@ -60,6 +60,12 @@ if (roomFromUrl) {
   $('p-room-code').value = roomFromUrl;
 }
 
+// ── Restore saved name ──────────────────────────
+try {
+  const savedName = localStorage.getItem('playerName');
+  if (savedName) $('p-player-name').value = savedName;
+} catch (_) {}
+
 // ── Join ─────────────────────────────────────────
 $('p-btn-join').onclick = () => joinRoom();
 $('p-room-code').addEventListener('keydown', e => { if (e.key === 'Enter') $('p-player-name').focus(); });
@@ -71,6 +77,7 @@ function joinRoom() {
   const name = $('p-player-name').value.trim();
   if (!code || code.length !== 4) return toast('أدخل كود الغرفة (4 أرقام)');
   if (!name) return toast('أدخل اسمك');
+  try { localStorage.setItem('playerName', name); } catch (_) {}
   socket.emit('join-room', { roomCode: code, playerName: name });
 }
 
