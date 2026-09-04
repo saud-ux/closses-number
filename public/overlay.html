@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>أقرب رقم - أوفرلاي</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      background: transparent !important;
+      overflow: hidden;
+    }
+
+    .overlay-wrap {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      position: relative;
+    }
+
+    .ov-connect {
+      background: rgba(22,33,62,0.9);
+      padding: 32px;
+      border-radius: 16px;
+      text-align: center;
+    }
+
+    .ov-connect input {
+      max-width: 200px;
+      margin: 12px auto;
+    }
+
+    .ov-main { display: none; width: 100%; height: 100%; position: relative; }
+    .ov-main.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+    .ov-round-badge {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(22,33,62,0.85);
+      padding: 8px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      backdrop-filter: blur(8px);
+    }
+
+    .ov-question {
+      font-size: 2.8rem;
+      font-weight: 800;
+      text-align: center;
+      text-shadow: 0 3px 16px rgba(0,0,0,0.9);
+      line-height: 1.5;
+      max-width: 80%;
+    }
+
+    .ov-timer {
+      font-size: 5rem;
+      font-weight: 900;
+      text-shadow: 0 3px 20px rgba(0,0,0,0.9);
+      margin: 20px 0;
+      direction: ltr;
+      transition: color 0.3s;
+    }
+
+    .ov-timer.warning { color: var(--gold); }
+    .ov-timer.danger { color: var(--red); animation: pulse 0.5s ease-in-out infinite; }
+
+    .ov-answer-hidden {
+      font-size: 3rem;
+      letter-spacing: 12px;
+      color: var(--gold);
+      text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+    }
+
+    .ov-guess-count {
+      font-size: 1.4rem;
+      color: var(--text-dim);
+      text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+      margin-top: 12px;
+    }
+
+    .ov-answer-reveal {
+      font-size: 5rem;
+      font-weight: 900;
+      color: var(--gold);
+      text-shadow: 0 3px 20px rgba(241,196,15,0.5);
+      direction: ltr;
+      animation: bounceIn 0.6s ease;
+    }
+
+    .ov-result-section {
+      width: 85%;
+      max-width: 1000px;
+    }
+
+    .ov-rankings {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 20px 0;
+    }
+
+    .ov-rank-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      background: rgba(22,33,62,0.7);
+      border-radius: 12px;
+      font-size: 1.2rem;
+      backdrop-filter: blur(4px);
+      animation: slideUp 0.4s ease backwards;
+    }
+
+    .ov-rank-row:nth-child(1) { background: rgba(46,204,113,0.2); animation-delay: 0.1s; }
+    .ov-rank-row:nth-child(2) { background: rgba(52,152,219,0.15); animation-delay: 0.2s; }
+    .ov-rank-row:nth-child(3) { background: rgba(155,89,182,0.15); animation-delay: 0.3s; }
+
+    .ov-rank-row .medal { font-size: 1.6rem; min-width: 36px; text-align: center; }
+    .ov-rank-row .name { flex: 1; font-weight: 700; }
+    .ov-rank-row .val { direction: ltr; color: var(--text-dim); }
+    .ov-rank-row .diff { direction: ltr; font-size: 0.9rem; color: var(--text-dim); }
+    .ov-rank-row .pts { color: var(--green); font-weight: 700; min-width: 70px; text-align: left; }
+
+    .ov-sidebar {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 260px;
+      background: rgba(22,33,62,0.85);
+      border-radius: 16px;
+      padding: 16px;
+      backdrop-filter: blur(8px);
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+
+    .ov-sidebar h3 {
+      color: var(--gold);
+      font-size: 1rem;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .ov-sb-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      font-size: 0.9rem;
+      border-radius: 6px;
+    }
+
+    .ov-sb-row:nth-child(2) { background: rgba(241,196,15,0.08); }
+
+    .ov-sb-row .sb-rank { min-width: 20px; color: var(--text-dim); font-weight: 700; }
+    .ov-sb-row .sb-name { flex: 1; }
+    .ov-sb-row .sb-score { color: var(--gold); font-weight: 700; }
+
+    .ov-number-line-wrap {
+      margin: 16px 0;
+      padding: 40px 40px 60px;
+      position: relative;
+    }
+
+    .ov-waiting {
+      font-size: 1.5rem;
+      color: var(--text-dim);
+      text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    }
+
+    .ov-gameover {
+      text-align: center;
+    }
+
+    .ov-gameover h2 {
+      font-size: 3rem;
+      margin-bottom: 24px;
+      text-shadow: 0 3px 16px rgba(0,0,0,0.8);
+    }
+
+    .ov-podium {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .ov-podium-item {
+      text-align: center;
+      animation: slideUp 0.5s ease backwards;
+    }
+
+    .ov-podium-item:nth-child(1) { animation-delay: 0.3s; }
+    .ov-podium-item:nth-child(2) { animation-delay: 0.1s; }
+    .ov-podium-item:nth-child(3) { animation-delay: 0.5s; }
+
+    .ov-podium-name {
+      font-weight: 700;
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+    }
+
+    .ov-podium-bar {
+      width: 120px;
+      border-radius: 12px 12px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: #fff;
+      padding-top: 12px;
+    }
+
+    .ov-podium-score {
+      font-size: 1.1rem;
+      color: var(--gold);
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay-wrap">
+    <div class="ov-connect" id="ov-connect">
+      <h2>🎯 أوفرلاي أقرب رقم</h2>
+      <p style="color:var(--text-dim);margin:8px 0;">أدخل كود الغرفة</p>
+      <input type="text" id="ov-room-code" maxlength="4" inputmode="numeric"
+        style="text-align:center;font-size:1.5rem;font-weight:700;letter-spacing:6px;direction:ltr;">
+      <button class="btn btn-primary btn-block mt-12" id="ov-btn-connect">اتصال</button>
+    </div>
+
+    <div class="ov-main" id="ov-main">
+      <div class="ov-round-badge" id="ov-round-badge"></div>
+
+      <div id="ov-state-waiting" class="ov-waiting">في انتظار بداية الجولة...</div>
+
+      <div id="ov-state-playing" style="display:none;text-align:center;width:100%;">
+        <div class="ov-question" id="ov-question"></div>
+        <div class="ov-timer" id="ov-timer">20</div>
+        <div class="ov-answer-hidden">❓❓❓</div>
+        <div class="ov-guess-count" id="ov-guess-count"></div>
+      </div>
+
+      <div id="ov-state-results" style="display:none;width:100%;">
+        <div style="text-align:center;">
+          <div class="ov-question" id="ov-result-question" style="font-size:1.8rem;margin-bottom:12px;"></div>
+          <div class="ov-answer-reveal" id="ov-result-answer"></div>
+        </div>
+        <div class="ov-result-section" style="margin:0 auto;">
+          <div class="ov-rankings" id="ov-rankings"></div>
+          <div class="ov-number-line-wrap" id="ov-number-line-wrap"></div>
+        </div>
+      </div>
+
+      <div id="ov-state-gameover" style="display:none;" class="ov-gameover">
+        <h2>🏆 النتيجة النهائية</h2>
+        <div class="ov-podium" id="ov-podium"></div>
+        <div id="ov-final-scores" style="max-width:400px;margin:0 auto;"></div>
+      </div>
+
+      <div class="ov-sidebar" id="ov-sidebar">
+        <h3>🏅 لوحة النقاط</h3>
+        <div id="ov-scoreboard"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let connected = false;
+
+    const $ = id => document.getElementById(id);
+
+    const params = new URLSearchParams(location.search);
+    const roomFromUrl = params.get('room');
+    if (roomFromUrl) {
+      $('ov-room-code').value = roomFromUrl;
+    }
+
+    $('ov-btn-connect').onclick = () => connectOverlay();
+    $('ov-room-code').addEventListener('keydown', e => { if (e.key === 'Enter') connectOverlay(); });
+
+    function connectOverlay() {
+      const code = $('ov-room-code').value.trim();
+      if (code.length !== 4) return;
+      socket.emit('join-overlay', { roomCode: code });
+    }
+
+    socket.on('overlay-joined', data => {
+      connected = true;
+      $('ov-connect').style.display = 'none';
+      $('ov-main').classList.add('active');
+      updateSidebar(data.players);
+      $('ov-round-badge').textContent = '';
+      showOvState('waiting');
+    });
+
+    socket.on('round-started', data => {
+      $('ov-round-badge').textContent = `الجولة ${data.roundNumber}/${data.totalRounds}`;
+      $('ov-question').textContent = data.question;
+      $('ov-timer').textContent = data.duration;
+      $('ov-timer').className = 'ov-timer';
+      $('ov-guess-count').textContent = `التخمينات: 0`;
+      showOvState('playing');
+    });
+
+    socket.on('timer-tick', data => {
+      $('ov-timer').textContent = data.remaining;
+      if (data.remaining <= 3) $('ov-timer').className = 'ov-timer danger';
+      else if (data.remaining <= 5) $('ov-timer').className = 'ov-timer warning';
+    });
+
+    socket.on('guess-count-updated', data => {
+      $('ov-guess-count').textContent = `التخمينات: ${data.guessed}/${data.total}`;
+    });
+
+    socket.on('round-result', data => {
+      $('ov-result-question').textContent = data.question;
+      animateNumber($('ov-result-answer'), data.correctAnswer);
+      renderOvRankings(data.rankings);
+      if (data.numberLine) renderOvNumberLine(data.numberLine);
+      else $('ov-number-line-wrap').innerHTML = '';
+      updateSidebar(data.scores);
+      showOvState('results');
+    });
+
+    socket.on('game-over', data => {
+      renderOvGameOver(data.finalScores);
+      showOvState('gameover');
+    });
+
+    socket.on('prepare-next-round', () => showOvState('waiting'));
+
+    socket.on('player-joined', data => updateSidebar(data.players));
+    socket.on('player-left', data => updateSidebar(data.players));
+    socket.on('game-reset', data => {
+      updateSidebar(data.players);
+      showOvState('waiting');
+      $('ov-round-badge').textContent = '';
+    });
+
+    socket.on('room-closed', () => {
+      $('ov-main').classList.remove('active');
+      $('ov-connect').style.display = 'block';
+      connected = false;
+    });
+
+    socket.on('error-msg', data => console.error(data.message));
+
+    function showOvState(state) {
+      ['waiting', 'playing', 'results', 'gameover'].forEach(s => {
+        $('ov-state-' + s).style.display = s === state ? '' : 'none';
+      });
+      $('ov-sidebar').style.display = state === 'gameover' ? 'none' : '';
+    }
+
+    function updateSidebar(players) {
+      const sorted = [...players].sort((a, b) => b.score - a.score);
+      let html = '';
+      sorted.slice(0, 10).forEach((p, i) => {
+        html += `<div class="ov-sb-row">
+          <span class="sb-rank">${i + 1}</span>
+          <span class="sb-name">${esc(p.name)}</span>
+          <span class="sb-score">${p.score}</span>
+        </div>`;
+      });
+      $('ov-scoreboard').innerHTML = html;
+    }
+
+    function renderOvRankings(rankings) {
+      const medals = ['🥇', '🥈', '🥉'];
+      let html = '';
+      rankings.slice(0, 5).forEach((r, i) => {
+        html += `<div class="ov-rank-row">
+          <span class="medal">${medals[i] || (i + 1)}</span>
+          <span class="name">${esc(r.name)}</span>
+          <span class="val">${r.value}</span>
+          <span class="diff">(فرق: ${r.difference})</span>
+          <span class="pts">${r.points > 0 ? '+' + r.points + ' نقاط' : ''}</span>
+        </div>`;
+      });
+      $('ov-rankings').innerHTML = html;
+    }
+
+    function renderOvNumberLine(nl) {
+      const container = $('ov-number-line-wrap');
+      let html = '<div class="number-line">';
+      html += `<div class="nl-correct" style="left:${nl.correctPosition}%">
+        <span class="nl-val">${nl.correctAnswer}</span>
+        <span class="star">⭐</span>
+      </div>`;
+
+      const colors = ['#2ecc71', '#3498db', '#9b59b6', '#e67e22', '#e74c3c'];
+      nl.points.slice(0, 8).forEach((p, i) => {
+        const color = colors[Math.min(i, colors.length - 1)];
+        html += `<div class="nl-point" style="left:${p.position}%">
+          <div class="nl-dot" style="background:${color}"></div>
+          <span class="nl-val">${p.value}</span>
+          <span class="nl-label">${esc(p.name)}</span>
+        </div>`;
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    function renderOvGameOver(scores) {
+      const medals = ['🥇', '🥈', '🥉'];
+      const heights = [160, 120, 90];
+      const colors = ['linear-gradient(180deg, #f1c40f, #e67e22)', 'linear-gradient(180deg, #3498db, #2980b9)', 'linear-gradient(180deg, #9b59b6, #8e44ad)'];
+      const order = [1, 0, 2];
+      let podiumHtml = '';
+      order.forEach(idx => {
+        if (!scores[idx]) return;
+        const p = scores[idx];
+        podiumHtml += `<div class="ov-podium-item">
+          <div class="ov-podium-name">${esc(p.name)}</div>
+          <div class="ov-podium-bar" style="height:${heights[idx]}px;background:${colors[idx]}">
+            ${medals[idx]}
+          </div>
+          <div class="ov-podium-score">${p.score} نقطة</div>
+        </div>`;
+      });
+      $('ov-podium').innerHTML = podiumHtml;
+
+      let scoresHtml = '';
+      scores.forEach((p, i) => {
+        if (i < 3) return;
+        scoresHtml += `<div class="ov-sb-row">
+          <span class="sb-rank">${i + 1}</span>
+          <span class="sb-name">${esc(p.name)}</span>
+          <span class="sb-score">${p.score}</span>
+        </div>`;
+      });
+      $('ov-final-scores').innerHTML = scoresHtml;
+    }
+
+    function animateNumber(el, target) {
+      const duration = 1200;
+      const startTime = performance.now();
+      const absTarget = Math.abs(target);
+      const sign = target < 0 ? '-' : '';
+
+      function step(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(absTarget * eased);
+        el.textContent = sign + current.toLocaleString();
+        if (progress < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

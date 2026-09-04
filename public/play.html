@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>أقرب رقم - العب</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+</head>
+<body>
+  <div class="player-container">
+    <div class="game-header">
+      <h1>🎯 أقرب رقم</h1>
+    </div>
+
+    <!-- ── Join Screen ───────────────────── -->
+    <div id="p-screen-join" class="screen active">
+      <div class="card">
+        <div class="join-form">
+          <div class="form-group">
+            <label>كود الغرفة</label>
+            <input type="text" id="p-room-code" placeholder="مثال: 8376" maxlength="4"
+              inputmode="numeric" pattern="[0-9]*" style="text-align:center;font-size:1.8rem;font-weight:700;letter-spacing:8px;direction:ltr;">
+          </div>
+          <div class="form-group">
+            <label>اسمك</label>
+            <input type="text" id="p-player-name" placeholder="اكتب اسمك" maxlength="20">
+          </div>
+          <button id="p-btn-join" class="btn btn-primary btn-block">
+            انضم
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Waiting Screen ────────────────── -->
+    <div id="p-screen-waiting" class="screen">
+      <div class="card">
+        <div class="waiting-text">
+          <div style="font-size:2.5rem;margin-bottom:12px;">⏳</div>
+          <p>في انتظار بداية الجولة...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Playing Screen ────────────────── -->
+    <div id="p-screen-playing" class="screen">
+      <div class="card">
+        <div class="round-info">
+          <span id="p-round-label"></span>
+          <div class="timer-circle" id="p-timer-circle">
+            <span class="time-num" id="p-timer-num">20</span>
+          </div>
+        </div>
+        <div class="question-text" id="p-question" style="font-size:1.3rem;"></div>
+      </div>
+
+      <div class="card" id="p-guess-card">
+        <div class="guess-input-wrapper">
+          <label style="font-size:1.1rem;margin-bottom:12px;">تخمينك</label>
+          <input type="number" id="p-guess-input" class="guess-input"
+            inputmode="numeric" placeholder="؟">
+          <button id="p-btn-guess" class="btn btn-primary btn-block mt-12" style="font-size:1.2rem;">
+            أرسل
+          </button>
+          <p class="first-guess-note">⚠️ أول تخمين فقط يُحتسب!</p>
+        </div>
+      </div>
+
+      <div class="card hidden" id="p-guess-sent">
+        <div class="text-center" style="padding:20px;">
+          <div style="font-size:2rem;margin-bottom:8px;">✅</div>
+          <p style="font-size:1.2rem;font-weight:700;">تم إرسال تخمينك</p>
+          <p style="font-size:2rem;font-weight:900;color:var(--gold);direction:ltr;margin-top:8px;" id="p-sent-value"></p>
+          <p style="color:var(--text-dim);margin-top:8px;">في انتظار النتيجة...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Result Screen ─────────────────── -->
+    <div id="p-screen-result" class="screen">
+      <div class="card animate-scale">
+        <div class="player-result">
+          <p style="color:var(--text-dim);margin-bottom:4px;">الجواب الصحيح</p>
+          <div class="big-num" id="p-correct-answer"></div>
+
+          <div id="p-result-details" class="mt-20">
+            <p style="color:var(--text-dim);">تخمينك</p>
+            <div style="font-size:2rem;font-weight:700;direction:ltr;" id="p-your-guess"></div>
+            <p style="color:var(--text-dim);margin-top:8px;">الفرق</p>
+            <div style="font-size:1.5rem;font-weight:700;direction:ltr;" id="p-your-diff"></div>
+
+            <div id="p-rank-section" class="mt-12">
+              <div class="rank-badge" id="p-rank-badge"></div>
+              <p style="font-size:1.3rem;font-weight:700;color:var(--green);margin-top:8px;" id="p-your-points"></p>
+            </div>
+          </div>
+
+          <div id="p-missed-section" class="hidden mt-20">
+            <p style="font-size:1.1rem;color:var(--red);">لم ترسل تخمين هذه الجولة</p>
+          </div>
+
+          <div class="mt-20" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:16px;">
+            <p style="color:var(--text-dim);">مجموع نقاطك</p>
+            <div style="font-size:1.5rem;font-weight:900;color:var(--gold);" id="p-total-score"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Game Over Screen ──────────────── -->
+    <div id="p-screen-gameover" class="screen">
+      <div class="card animate-scale text-center">
+        <h2 style="font-size:1.8rem;margin-bottom:16px;">🏆 انتهت اللعبة!</h2>
+        <div id="p-final-rank"></div>
+        <div id="p-final-scores" class="mt-20"></div>
+      </div>
+    </div>
+
+    <!-- ── Kicked Screen ─────────────────── -->
+    <div id="p-screen-kicked" class="screen">
+      <div class="card text-center">
+        <div style="font-size:3rem;margin-bottom:12px;">😔</div>
+        <h2>تم إخراجك من الغرفة</h2>
+        <button class="btn btn-primary mt-20" onclick="location.reload()">عودة</button>
+      </div>
+    </div>
+
+    <!-- ── Room Closed Screen ────────────── -->
+    <div id="p-screen-closed" class="screen">
+      <div class="card text-center">
+        <div style="font-size:3rem;margin-bottom:12px;">🚪</div>
+        <h2>الغرفة أُغلقت</h2>
+        <button class="btn btn-primary mt-20" onclick="location.reload()">عودة</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="player.js"></script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>أقرب رقم - لوحة التحكم</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+</head>
+<body>
+  <div class="container">
+    <div class="game-header">
+      <h1>🎯 أقرب رقم</h1>
+      <p class="subtitle">لعبة التخمين التفاعلية</p>
+    </div>
+
+    <!-- ── Create Room Screen ────────────── -->
+    <div id="screen-create" class="screen active">
+      <div class="card text-center">
+        <button id="btn-create" class="btn btn-primary btn-block" style="font-size:1.3rem; padding:18px;">
+          إنشاء غرفة جديدة
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Lobby Screen ──────────────────── -->
+    <div id="screen-lobby" class="screen">
+      <div class="card">
+        <div class="room-code-display">
+          <div class="room-code" id="room-code-display">----</div>
+          <button class="copy-btn" id="btn-copy-link">📋 نسخ الرابط</button>
+        </div>
+        <p class="text-center" style="color:var(--text-dim);font-size:0.9rem;" id="room-link-text"></p>
+      </div>
+
+      <div class="card twitch-section">
+        <div class="section-title">تويتش (اختياري)</div>
+        <div class="twitch-row">
+          <input type="text" id="twitch-channel" placeholder="اسم القناة" style="flex:1">
+          <button class="btn btn-sm" id="btn-twitch-connect" style="background:var(--purple);color:#fff;">اتصال</button>
+          <button class="btn btn-sm btn-secondary hidden" id="btn-twitch-disconnect">قطع</button>
+        </div>
+        <div class="twitch-status hidden" id="twitch-status"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">اللاعبين (<span id="player-count-lobby">0</span>)</div>
+        <div class="players-grid" id="players-list-lobby"></div>
+        <div id="no-players" style="text-align:center;color:var(--text-dim);padding:16px;">في انتظار اللاعبين...</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">إعدادات</div>
+        <div class="settings-grid">
+          <div class="form-group">
+            <label>عدد الجولات</label>
+            <select id="total-rounds">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="15">15</option>
+              <option value="20">20</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>وقت الجولة</label>
+            <select id="round-duration">
+              <option value="10">10 ثانية</option>
+              <option value="15">15 ثانية</option>
+              <option value="20" selected>20 ثانية</option>
+              <option value="30">30 ثانية</option>
+              <option value="45">45 ثانية</option>
+              <option value="60">60 ثانية</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <button id="btn-start-game" class="btn btn-primary btn-block" disabled style="font-size:1.2rem;">
+        ابدأ اللعبة
+      </button>
+    </div>
+
+    <!-- ── Setup Round Screen ────────────── -->
+    <div id="screen-setup" class="screen">
+      <div class="card">
+        <div class="round-info">
+          <span id="round-label-setup">الجولة 1/10</span>
+        </div>
+        <div class="form-group">
+          <label>السؤال</label>
+          <input type="text" id="question-input" placeholder="اكتب السؤال هنا...">
+        </div>
+        <div class="form-group">
+          <label>الجواب (مخفي عن اللاعبين)</label>
+          <input type="number" id="answer-input" placeholder="الرقم الصحيح" inputmode="numeric">
+        </div>
+        <button id="btn-start-round" class="btn btn-primary btn-block mt-12" disabled>
+          ابدأ الجولة
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="section-title">أو اختر من بنك الأسئلة</div>
+        <div class="question-bank" id="question-bank-list"></div>
+      </div>
+    </div>
+
+    <!-- ── Playing Screen ────────────────── -->
+    <div id="screen-playing" class="screen">
+      <div class="card">
+        <div class="round-info">
+          <span id="round-label-playing"></span>
+          <div class="timer-circle" id="timer-circle">
+            <span class="time-num" id="timer-num">20</span>
+          </div>
+        </div>
+        <div class="question-text" id="question-display"></div>
+        <div class="answer-hidden">❓❓❓</div>
+        <div class="guess-counter mt-12" id="guess-counter">التخمينات: 0/0</div>
+        <button id="btn-end-early" class="btn btn-secondary btn-sm mt-12" style="display:block;margin:12px auto 0;">
+          إنهاء الجولة مبكراً
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Results Screen ────────────────── -->
+    <div id="screen-results" class="screen">
+      <div class="card animate-fade">
+        <div class="round-info">
+          <span id="round-label-results"></span>
+        </div>
+        <div class="question-text" id="result-question" style="font-size:1.2rem;padding:8px;"></div>
+        <div class="answer-reveal animate-bounce" id="result-answer"></div>
+      </div>
+
+      <div class="card animate-slide">
+        <div class="section-title">الترتيب بالأقرب</div>
+        <ul class="rankings-list" id="rankings-list"></ul>
+        <p id="no-guesses" class="text-center hidden" style="color:var(--text-dim);padding:12px;">لا يوجد تخمينات</p>
+      </div>
+
+      <div class="card animate-slide" id="numberline-card">
+        <div class="section-title">خط الأرقام</div>
+        <div class="number-line-container" id="number-line-container"></div>
+      </div>
+
+      <div class="card animate-slide">
+        <div class="scoreboard" id="scoreboard-results"></div>
+      </div>
+
+      <button id="btn-next-round" class="btn btn-gold btn-block mt-12" style="font-size:1.2rem;"></button>
+    </div>
+
+    <!-- ── Game Over Screen ──────────────── -->
+    <div id="screen-gameover" class="screen">
+      <div class="card text-center animate-scale">
+        <h2 style="font-size:2rem;margin-bottom:16px;">🏆 النتيجة النهائية</h2>
+        <div id="final-podium"></div>
+      </div>
+      <div class="card animate-slide">
+        <div class="scoreboard" id="final-scoreboard"></div>
+      </div>
+      <button id="btn-play-again" class="btn btn-primary btn-block mt-20" style="font-size:1.2rem;">
+        العب مرة ثانية
+      </button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
