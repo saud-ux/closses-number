@@ -12,6 +12,10 @@ const io = new Server(server, { cors: { origin: '*' } });
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.get('/download-offline', (req, res) => {
+  res.download(path.join(__dirname, 'public', 'offline.html'), 'أقرب-رقم-بدون-نت.html');
+});
+
 // ── Question Bank ──────────────────────────────────────────────
 const questionBank = [
   { category: 'جغرافيا', emoji: '🌍', question: 'كم عدد دول العالم؟', answer: 195 },
